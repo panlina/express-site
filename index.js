@@ -10,9 +10,14 @@ commander
 	.option('--ssl')
 	.option('--cert <cert>')
 	.option('--key <key>')
-	.option('--proxy-rules <proxy-rules>');
+	.option('--proxy-rules <proxy-rules>')
+	.option('--proxy-options <proxy-options>');
 commander.parse(process.argv);
-var proxy = httpProxy.createProxyServer();
+var proxy = httpProxy.createProxyServer(
+	commander.proxyOptions ?
+		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
+		undefined
+);
 var proxyRules = new HttpProxyRules(
 	commander.proxyRules ?
 		JSON.parse(fs.readFileSync(commander.proxyRules, { encoding: "utf-8" })) :
