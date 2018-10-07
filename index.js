@@ -2,6 +2,7 @@ var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
+var expressJsonData = require('@kjots/express-json-data').default;
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('http-proxy-rules');
 var commander = require('commander');
@@ -11,7 +12,9 @@ commander
 	.option('--cert <cert>')
 	.option('--key <key>')
 	.option('--proxy-rules <proxy-rules>')
-	.option('--proxy-options <proxy-options>');
+	.option('--proxy-options <proxy-options>')
+	.option('--admin-port <admin-port>', undefined, Number, 9000)
+	.option('--admin-ssl');
 commander.parse(process.argv);
 var proxy = httpProxy.createProxyServer(
 	commander.proxyOptions ?
@@ -39,3 +42,13 @@ var server =
 		}, app) :
 		http.createServer(app);
 server.listen(commander.port || (commander.ssl ? 443 : 80));
+var adminApp = express();
+adminApp.use("/proxy-rules", expressJsonData({ data: proxyRules }))
+var adminServer =
+	commander.adminSsl ?
+		https.createServer({
+			cert: fs.readFileSync(commander.cert),
+			key: fs.readFileSync(commander.key)
+		}, adminApp) :
+		http.createServer(adminApp);
+adminServer.listen(commander.adminPort);

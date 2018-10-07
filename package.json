@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "express": "*",
+    "@kjots/express-json-data": "*",
     "commander": "*"
   }
 }
