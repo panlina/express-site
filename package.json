@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "dependencies": {
     "express": "*",
+    "cors": "*",
+    "express-basic-auth": "*",
     "@kjots/express-json-data": "*",
     "commander": "*"
   }
