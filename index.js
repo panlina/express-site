@@ -7,6 +7,7 @@ var httpProxy = require('http-proxy');
 var HttpProxyRules = require('http-proxy-rules');
 var createServer = require('create-server');
 var commander = require('commander');
+var App = require('./App');
 commander
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
@@ -14,6 +15,7 @@ commander
 	.option('--key <key>')
 	.option('--proxy-rules <proxy-rules>')
 	.option('--proxy-options <proxy-options>')
+	.option('--app <app>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
 	.option('--admin-ssl')
 	.option('--admin-cors <admin-cors>')
@@ -51,6 +53,46 @@ if (commander.adminCors)
 if (commander.adminBasicAuth)
 	adminApp
 		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
-adminApp.use("/proxy-rules", expressJsonData({ data: proxyRules }))
+adminApp
+	.use("/proxy-rules", expressJsonData({ data: proxyRules }))
+	.get("/app/", (req, res, next) => {
+		var json = {};
+		for (var name in app)
+			json[name] = serialize(app[name]);
+		res.json(json);
+	})
+	.get("/app/:name", (req, res, next) => {
+		res.json(serialize(app[req.params.name]));
+	})
+function serialize(app) {
+	return {
+		module: app.module,
+		arguments: app.arguments,
+		running: app.server != undefined
+	};
+}
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
+var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: "utf-8" })) : {};
+for (var name in app)
+	app[name] = new App(app[name].module, app[name].arguments);
+for (var name in app)
+	start(name);
+function start(name) {
+	var a = app[name];
+	a.start(commander.ssl ? serverOptions : undefined);
+	var protocol = commander.ssl ? 'https' : 'http',
+		port = a.server.address().port;
+	if (name)
+		proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
+	else
+		proxyRules.default = `${protocol}://localhost:${port}`;
+}
+function stop(name) {
+	var a = app[name];
+	a.stop();
+	if (name)
+		delete proxyRules.rules[`/${name}`];
+	else
+		delete proxyRules.default;
+}
