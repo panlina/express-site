@@ -6,6 +6,7 @@
     "cors": "*",
     "express-basic-auth": "*",
     "@kjots/express-json-data": "*",
+    "create-server": "panlina/create-server",
     "commander": "*"
   }
 }

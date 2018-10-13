@@ -1,5 +1,3 @@
-var http = require('http');
-var https = require('https');
 var fs = require('fs');
 var express = require('express');
 var cors = require('cors');
@@ -7,6 +5,7 @@ var basicAuth = require('express-basic-auth');
 var expressJsonData = require('@kjots/express-json-data').default;
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('http-proxy-rules');
+var createServer = require('create-server');
 var commander = require('commander');
 commander
 	.option('--port <port>', undefined, Number)
@@ -20,6 +19,11 @@ commander
 	.option('--admin-cors <admin-cors>')
 	.option('--admin-basic-auth <admin-basic-auth>');
 commander.parse(process.argv);
+if (commander.cert && commander.key)
+	var serverOptions = {
+		cert: fs.readFileSync(commander.cert),
+		key: fs.readFileSync(commander.key)
+	};
 var proxy = httpProxy.createProxyServer(
 	commander.proxyOptions ?
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
@@ -38,13 +42,7 @@ app.use(function (req, res, next) {
 	else
 		next();
 });
-var server =
-	commander.ssl ?
-		https.createServer({
-			cert: fs.readFileSync(commander.cert),
-			key: fs.readFileSync(commander.key)
-		}, app) :
-		http.createServer(app);
+var server = createServer(app, commander.ssl ? serverOptions : undefined);
 server.listen(commander.port || (commander.ssl ? 443 : 80));
 var adminApp = express();
 if (commander.adminCors)
@@ -54,11 +52,5 @@ if (commander.adminBasicAuth)
 	adminApp
 		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
 adminApp.use("/proxy-rules", expressJsonData({ data: proxyRules }))
-var adminServer =
-	commander.adminSsl ?
-		https.createServer({
-			cert: fs.readFileSync(commander.cert),
-			key: fs.readFileSync(commander.key)
-		}, adminApp) :
-		http.createServer(adminApp);
+var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
