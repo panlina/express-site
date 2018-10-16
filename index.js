@@ -1,5 +1,6 @@
 var fs = require('fs');
 var express = require('express');
+var bodyParser = require('body-parser');
 var cors = require('cors');
 var basicAuth = require('express-basic-auth');
 var expressJsonData = require('@kjots/express-json-data').default;
@@ -26,6 +27,7 @@ if (commander.cert && commander.key)
 		cert: fs.readFileSync(commander.cert),
 		key: fs.readFileSync(commander.key)
 	};
+var jsonBodyParser = bodyParser.json();
 var proxy = httpProxy.createProxyServer(
 	commander.proxyOptions ?
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
@@ -63,6 +65,54 @@ adminApp
 	})
 	.get("/app/:name", (req, res, next) => {
 		res.json(serialize(app[req.params.name]));
+	})
+	.put("/app/:name", jsonBodyParser, (req, res, next) => {
+		var a = app[req.params.name];
+		if (a && a.server) {
+			res.status(409).send("The app is running. Stop it and try again.");
+			return;
+		}
+		app[req.params.name] = new App(req.body.module, req.body.arguments);
+		res.status(a ? 200 : 201).end();
+	})
+	.delete("/app/:name", (req, res, next) => {
+		var a = app[req.params.name];
+		if (!a) {
+			res.sendStatus(404);
+			return;
+		}
+		if (a.server) {
+			res.status(409).send("The app is running. Stop it and try again.");
+			return;
+		}
+		delete app[req.params.name];
+		res.status(204).end();
+	})
+	.post("/app/:name/start", (req, res, next) => {
+		var a = app[req.params.name];
+		if (!a) {
+			res.sendStatus(404);
+			return;
+		}
+		if (a.server) {
+			res.status(409).send("The app is already running.");
+			return;
+		}
+		start(req.params.name);
+		res.status(204).end();
+	})
+	.post("/app/:name/stop", (req, res, next) => {
+		var a = app[req.params.name];
+		if (!a) {
+			res.sendStatus(404);
+			return;
+		}
+		if (!a.server) {
+			res.status(409).send("The app is not running.");
+			return;
+		}
+		stop(req.params.name);
+		res.status(204).end();
 	})
 function serialize(app) {
 	return {
