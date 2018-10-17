@@ -64,7 +64,12 @@ adminApp
 		res.json(json);
 	})
 	.get("/app/:name", (req, res, next) => {
-		res.json(serialize(app[req.params.name]));
+		var a = app[req.params.name];
+		if (!a) {
+			res.sendStatus(404);
+			return;
+		}
+		res.json(serialize(a));
 	})
 	.put("/app/:name", jsonBodyParser, (req, res, next) => {
 		var a = app[req.params.name];
