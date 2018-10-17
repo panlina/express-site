@@ -103,8 +103,9 @@ adminApp
 			res.status(409).send("The app is already running.");
 			return;
 		}
-		start(req.params.name);
-		res.status(204).end();
+		start(req.params.name, () => {
+			res.status(204).end();
+		});
 	})
 	.post("/app/:name/stop", (req, res, next) => {
 		var a = app[req.params.name];
@@ -116,8 +117,9 @@ adminApp
 			res.status(409).send("The app is not running.");
 			return;
 		}
-		stop(req.params.name);
-		res.status(204).end();
+		stop(req.params.name, () => {
+			res.status(204).end();
+		});
 	})
 function serialize(app) {
 	return {
@@ -132,22 +134,26 @@ var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: 
 for (var name in app)
 	app[name] = new App(app[name].module, app[name].arguments);
 for (var name in app)
-	start(name);
-function start(name) {
+	start(name, () => { });
+function start(name, callback) {
 	var a = app[name];
-	a.start(commander.ssl ? serverOptions : undefined);
-	var protocol = commander.ssl ? 'https' : 'http',
-		port = a.server.address().port;
-	if (name)
-		proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
-	else
-		proxyRules.default = `${protocol}://localhost:${port}`;
+	a.start(commander.ssl ? serverOptions : undefined, function () {
+		var protocol = commander.ssl ? 'https' : 'http',
+			port = a.server.address().port;
+		if (name)
+			proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
+		else
+			proxyRules.default = `${protocol}://localhost:${port}`;
+		callback.apply(this, arguments);
+	});
 }
-function stop(name) {
+function stop(name, callback) {
 	var a = app[name];
-	a.stop();
-	if (name)
-		delete proxyRules.rules[`/${name}`];
-	else
-		delete proxyRules.default;
+	a.stop(function () {
+		if (name)
+			delete proxyRules.rules[`/${name}`];
+		else
+			delete proxyRules.default;
+		callback.apply(this, arguments);
+	});
 }
