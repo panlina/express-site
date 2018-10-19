@@ -42,7 +42,22 @@ var app = express();
 app.use(function (req, res, next) {
 	var target = proxyRules.match(req);
 	if (target)
-		proxy.web(req, res, { target: target });
+		proxy.web(req, res, { target: target }, function (e) {
+			switch (e.code) {
+				case "ENOTFOUND":
+					res.status(404);
+					break;
+				case "ECONNREFUSED":
+					res.status(502);
+					break;
+				case "ETIMEDOUT":
+					res.status(504);
+					break;
+				default:
+					res.status(500);
+			}
+			res.send(e);
+		});
 	else
 		next();
 });
