@@ -152,8 +152,8 @@ for (var name in app)
 	start(name, () => { });
 function start(name, callback) {
 	var a = app[name];
-	a.start(commander.ssl ? serverOptions : undefined, function () {
-		var protocol = commander.ssl ? 'https' : 'http',
+	a.start(undefined, function () {
+		var protocol = 'http',
 			port = a.server.address().port;
 		if (name)
 			proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
