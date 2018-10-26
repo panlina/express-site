@@ -88,7 +88,7 @@ adminApp
 	})
 	.put("/app/:name", jsonBodyParser, (req, res, next) => {
 		var a = app[req.params.name];
-		if (a && a.server) {
+		if (a && a.process) {
 			res.status(409).send("The app is running. Stop it and try again.");
 			return;
 		}
@@ -101,7 +101,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (a.server) {
+		if (a.process) {
 			res.status(409).send("The app is running. Stop it and try again.");
 			return;
 		}
@@ -114,7 +114,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (a.server) {
+		if (a.process) {
 			res.status(409).send("The app is already running.");
 			return;
 		}
@@ -128,7 +128,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (!a.server) {
+		if (!a.process) {
 			res.status(409).send("The app is not running.");
 			return;
 		}
@@ -140,7 +140,7 @@ function serialize(app) {
 	return {
 		module: app.module,
 		arguments: app.arguments,
-		running: app.server != undefined
+		running: app.process != undefined
 	};
 }
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
@@ -152,9 +152,9 @@ for (var name in app)
 	start(name, () => { });
 function start(name, callback) {
 	var a = app[name];
-	a.start(undefined, function () {
+	a.start(function () {
 		var protocol = 'http',
-			port = a.server.address().port;
+			port = a.port;
 		if (name)
 			proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
 		else
