@@ -79,6 +79,7 @@ adminApp
 		res.json(json);
 	})
 	.get("/app/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
 		if (!a) {
 			res.sendStatus(404);
@@ -87,6 +88,7 @@ adminApp
 		res.json(serialize(a));
 	})
 	.put("/app/:name", jsonBodyParser, (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
 		if (a && a.process) {
 			res.status(409).send("The app is running. Stop it and try again.");
@@ -96,6 +98,7 @@ adminApp
 		res.status(a ? 200 : 201).end();
 	})
 	.delete("/app/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
 		if (!a) {
 			res.sendStatus(404);
@@ -109,6 +112,7 @@ adminApp
 		res.status(204).end();
 	})
 	.post("/app/:name/start", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
 		if (!a) {
 			res.sendStatus(404);
@@ -123,6 +127,7 @@ adminApp
 		});
 	})
 	.post("/app/:name/stop", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
 		if (!a) {
 			res.sendStatus(404);
