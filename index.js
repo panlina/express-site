@@ -3,7 +3,6 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 var basicAuth = require('express-basic-auth');
-var expressJsonData = require('@kjots/express-json-data').default;
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('http-proxy-rules');
 var createServer = require('create-server');
@@ -27,7 +26,7 @@ if (commander.cert && commander.key)
 		cert: fs.readFileSync(commander.cert),
 		key: fs.readFileSync(commander.key)
 	};
-var jsonBodyParser = bodyParser.json();
+var jsonBodyParser = bodyParser.json({ strict: false });
 var proxy = httpProxy.createProxyServer(
 	commander.proxyOptions ?
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
@@ -71,7 +70,45 @@ if (commander.adminBasicAuth)
 	adminApp
 		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
 adminApp
-	.use("/proxy-rules", expressJsonData({ data: proxyRules }))
+	.get("/proxy-rules/", (req, res, next) => {
+		var p = Object.assign({}, proxyRules.rules);
+		p[""] = proxyRules.default;
+		res.json(p);
+	})
+	.get("/proxy-rules/:name", (req, res, next) => {
+		var p = req.params.name == 'default' ?
+			proxyRules.default :
+			proxyRules.rules[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		res.json(p);
+	})
+	.put("/proxy-rules/:name", jsonBodyParser, (req, res, next) => {
+		var p = req.params.name == 'default' ?
+			proxyRules.default :
+			proxyRules.rules[req.params.name];
+		if (req.params.name == 'default')
+			proxyRules.default = req.body;
+		else
+			proxyRules.rules[req.params.name] = req.body;
+		res.status(p ? 200 : 201).end();
+	})
+	.delete("/proxy-rules/:name", (req, res, next) => {
+		var p = req.params.name == 'default' ?
+			proxyRules.default :
+			proxyRules.rules[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		if (req.params.name == 'default')
+			delete proxyRules.default;
+		else
+			delete proxyRules.rules[req.params.name];
+		res.status(204).end();
+	})
 	.get("/app/", (req, res, next) => {
 		var json = {};
 		for (var name in app)
