@@ -37,9 +37,19 @@ var proxyRules = new HttpProxyRules(
 		JSON.parse(fs.readFileSync(commander.proxyRules, { encoding: "utf-8" })) :
 		{ rules: {} }
 );
+function matchApp(req) {
+	var end = req.url.indexOf('/', 1);
+	var name = end != -1 ? req.url.substring(1, end) : '';
+	var a = app[name];
+	if (a) if (a.port) {
+		if (end != -1)
+			req.url = req.url.substr(end);
+		return `http://localhost:${a.port}`;
+	}
+}
 var app = express();
 app.use(function (req, res, next) {
-	var target = proxyRules.match(req);
+	var target = matchApp(req) || proxyRules.match(req);
 	if (target)
 		proxy.web(req, res, { target: target }, function (e) {
 			switch (e.code) {
@@ -159,7 +169,7 @@ adminApp
 			res.status(409).send("The app is already running.");
 			return;
 		}
-		start(req.params.name, () => {
+		a.start(() => {
 			res.status(204).end();
 		});
 	})
@@ -174,7 +184,7 @@ adminApp
 			res.status(409).send("The app is not running.");
 			return;
 		}
-		stop(req.params.name, () => {
+		a.stop(() => {
 			res.status(204).end();
 		});
 	})
@@ -191,26 +201,4 @@ var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: 
 for (var name in app)
 	app[name] = new App(app[name].module, app[name].arguments);
 for (var name in app)
-	start(name, () => { });
-function start(name, callback) {
-	var a = app[name];
-	a.start(function () {
-		var protocol = 'http',
-			port = a.port;
-		if (name)
-			proxyRules.rules[`/${name}`] = `${protocol}://localhost:${port}`;
-		else
-			proxyRules.default = `${protocol}://localhost:${port}`;
-		callback.apply(this, arguments);
-	});
-}
-function stop(name, callback) {
-	var a = app[name];
-	a.stop(function () {
-		if (name)
-			delete proxyRules.rules[`/${name}`];
-		else
-			delete proxyRules.default;
-		callback.apply(this, arguments);
-	});
-}
+	app[name].start(() => { });
