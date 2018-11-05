@@ -137,7 +137,7 @@ adminApp
 	.put("/app/:name", jsonBodyParser, (req, res, next) => {
 		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
-		if (a && a.process) {
+		if (a && a.running) {
 			res.status(409).send("The app is running. Stop it and try again.");
 			return;
 		}
@@ -151,7 +151,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (a.process) {
+		if (a.running) {
 			res.status(409).send("The app is running. Stop it and try again.");
 			return;
 		}
@@ -165,7 +165,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (a.process) {
+		if (a.running) {
 			res.status(409).send("The app is already running.");
 			return;
 		}
@@ -180,7 +180,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		if (!a.process) {
+		if (!a.running) {
 			res.status(409).send("The app is not running.");
 			return;
 		}
@@ -192,7 +192,7 @@ function serialize(app) {
 	return {
 		module: app.module,
 		arguments: app.arguments,
-		running: app.process != undefined
+		running: app.running
 	};
 }
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);

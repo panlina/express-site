@@ -25,5 +25,8 @@ App.prototype.stop = function (callback) {
 		callback.call(this, arguments);
 	});
 };
+Object.defineProperty(App.prototype, 'running', {
+	get: function () { return this.process != undefined; }
+});
 
 module.exports = App;
