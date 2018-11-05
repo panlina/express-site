@@ -80,12 +80,12 @@ if (commander.adminBasicAuth)
 	adminApp
 		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
 adminApp
-	.get("/proxy-rules/", (req, res, next) => {
+	.get("/proxy-rule/", (req, res, next) => {
 		var p = Object.assign({}, proxyRules.rules);
 		p[""] = proxyRules.default;
 		res.json(p);
 	})
-	.get("/proxy-rules/:name", (req, res, next) => {
+	.get("/proxy-rule/:name", (req, res, next) => {
 		var p = req.params.name == 'default' ?
 			proxyRules.default :
 			proxyRules.rules[req.params.name];
@@ -95,7 +95,7 @@ adminApp
 		}
 		res.json(p);
 	})
-	.put("/proxy-rules/:name", jsonBodyParser, (req, res, next) => {
+	.put("/proxy-rule/:name", jsonBodyParser, (req, res, next) => {
 		var p = req.params.name == 'default' ?
 			proxyRules.default :
 			proxyRules.rules[req.params.name];
@@ -105,7 +105,7 @@ adminApp
 			proxyRules.rules[req.params.name] = req.body;
 		res.status(p ? 200 : 201).end();
 	})
-	.delete("/proxy-rules/:name", (req, res, next) => {
+	.delete("/proxy-rule/:name", (req, res, next) => {
 		var p = req.params.name == 'default' ?
 			proxyRules.default :
 			proxyRules.rules[req.params.name];
