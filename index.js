@@ -190,6 +190,7 @@ adminApp
 	})
 function serialize(app) {
 	return {
+		type: app.type,
 		module: app.module,
 		arguments: app.arguments,
 		running: app.running
