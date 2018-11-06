@@ -1,8 +1,8 @@
 var child_process = require('child_process');
 
-function App(module, arguments) {
-	this.module = module;
-	this.arguments = arguments;
+function App(argument) {
+	this.module = argument.module;
+	this.arguments = argument.arguments;
 	this.process;
 	this.port;
 }

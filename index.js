@@ -141,7 +141,7 @@ adminApp
 			res.status(409).send("The app is running. Stop it and try again.");
 			return;
 		}
-		app[req.params.name] = new App(req.body.module, req.body.arguments);
+		app[req.params.name] = new App(req.body);
 		res.status(a ? 200 : 201).end();
 	})
 	.delete("/app/:name", (req, res, next) => {
@@ -199,6 +199,6 @@ var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : un
 adminServer.listen(commander.adminPort);
 var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: "utf-8" })) : {};
 for (var name in app)
-	app[name] = new App(app[name].module, app[name].arguments);
+	app[name] = new App(app[name]);
 for (var name in app)
 	app[name].start(() => { });
