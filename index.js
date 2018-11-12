@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
@@ -6,6 +7,7 @@ var basicAuth = require('express-basic-auth');
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('http-proxy-rules');
 var createServer = require('create-server');
+var npm = require('global-npm');
 var commander = require('commander');
 var App = require('./App');
 commander
@@ -188,6 +190,56 @@ adminApp
 			res.status(204).end();
 		});
 	})
+	.get("/module/", (req, res, next) => {
+		res.json(module);
+	})
+	.get("/module/:name", (req, res, next) => {
+		var m = module[req.params.name];
+		if (!m) {
+			res.sendStatus(404);
+			return;
+		}
+		res.json(m);
+	})
+	.post("/module/", jsonBodyParser, (req, res, next) => {
+		npm.load({ prefix: "./site_modules" }, function (er) {
+			if (er) {
+				res.status(500).send(er);
+				return;
+			}
+			npm.commands.install([req.body.source], function (er, data) {
+				if (er) {
+					res.status(500).send(er);
+					return;
+				}
+				var [[, dir]] = data;
+				var name = path.basename(dir);
+				module[name] = req.body;
+				res.status(201).end();
+			});
+		});
+	})
+	.delete("/module/:name", jsonBodyParser, (req, res, next) => {
+		var m = module[req.params.name];
+		if (!m) {
+			res.sendStatus(404);
+			return;
+		}
+		npm.load({ prefix: "./site_modules" }, function (er) {
+			if (er) {
+				res.status(500).send(er);
+				return;
+			}
+			npm.commands.uninstall([req.params.name], function (er) {
+				if (er) {
+					res.status(500).send(er);
+					return;
+				}
+				delete module[req.params.name];
+				res.status(204).end();
+			});
+		});
+	})
 function serialize(app) {
 	return {
 		type: app.type,
@@ -199,6 +251,7 @@ function serialize(app) {
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
 var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: "utf-8" })) : {};
+var module = {};
 for (var name in app)
 	app[name] = new App(app[name]);
 for (var name in app)

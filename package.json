@@ -6,6 +6,7 @@
     "cors": "*",
     "express-basic-auth": "*",
     "create-server": "panlina/create-server",
+    "global-npm": "*",
     "commander": "*"
   }
 }
