@@ -10,6 +10,7 @@ var createServer = require('create-server');
 var npm = require('global-npm');
 var commander = require('commander');
 var App = require('./App');
+var Storage = require('./Storage');
 commander
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
@@ -251,7 +252,7 @@ function serialize(app) {
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
 var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: "utf-8" })) : {};
-var module = {};
+var module = Storage('./module.json');
 for (var name in app)
 	app[name] = new App(app[name]);
 for (var name in app)
