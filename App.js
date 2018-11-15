@@ -1,4 +1,5 @@
 var child_process = require('child_process');
+var Module = require('./Module');
 
 function App(argument) {
 	this.type = argument.type;
@@ -11,7 +12,7 @@ App.prototype.start = function (callback) {
 	switch (this.type) {
 		case 'middleware':
 			var $this = this;
-			this.process = child_process.fork('serveApp.js', ["--module", this.module, "--arguments", JSON.stringify(this.arguments)]);
+			this.process = child_process.fork('serveApp.js', ["--module", Module.resolve(this.module), "--arguments", JSON.stringify(this.arguments)]);
 			this.process.send('start');
 			this.process.on('message', function (message) {
 				$this.port = message;
@@ -19,7 +20,7 @@ App.prototype.start = function (callback) {
 			});
 			break;
 		case 'standalone':
-			this.process = child_process.fork(this.module, this.arguments);
+			this.process = child_process.fork(Module.resolve(this.module), this.arguments);
 			callback.apply(this, arguments);
 			break;
 	}
