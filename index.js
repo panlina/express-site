@@ -11,6 +11,7 @@ var npm = require('global-npm');
 var commander = require('commander');
 var App = require('./App');
 var Storage = require('./Storage');
+var ProxyRules = require('./ProxyRules');
 commander
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
@@ -40,6 +41,7 @@ var proxyRules = new HttpProxyRules(
 		JSON.parse(fs.readFileSync(commander.proxyRules, { encoding: "utf-8" })) :
 		{ rules: {} }
 );
+var proxyRule = ProxyRules(proxyRules);
 function matchApp(req) {
 	var end = req.url.indexOf('/', 1);
 	var name = end != -1 ? req.url.substring(1, end) : '';
@@ -84,14 +86,11 @@ if (commander.adminBasicAuth)
 		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
 adminApp
 	.get("/proxy-rule/", (req, res, next) => {
-		var p = Object.assign({}, proxyRules.rules);
-		p[""] = proxyRules.default;
-		res.json(p);
+		res.json(proxyRule);
 	})
 	.get("/proxy-rule/:name", (req, res, next) => {
-		var p = req.params.name == 'default' ?
-			proxyRules.default :
-			proxyRules.rules[req.params.name];
+		if (req.params.name == 'default') req.params.name = '';
+		var p = proxyRule[req.params.name];
 		if (!p) {
 			res.sendStatus(404);
 			return;
@@ -99,27 +98,19 @@ adminApp
 		res.json(p);
 	})
 	.put("/proxy-rule/:name", jsonBodyParser, (req, res, next) => {
-		var p = req.params.name == 'default' ?
-			proxyRules.default :
-			proxyRules.rules[req.params.name];
-		if (req.params.name == 'default')
-			proxyRules.default = req.body;
-		else
-			proxyRules.rules[req.params.name] = req.body;
+		if (req.params.name == 'default') req.params.name = '';
+		var p = proxyRule[req.params.name];
+		proxyRule[req.params.name] = req.body;
 		res.status(p ? 200 : 201).end();
 	})
 	.delete("/proxy-rule/:name", (req, res, next) => {
-		var p = req.params.name == 'default' ?
-			proxyRules.default :
-			proxyRules.rules[req.params.name];
+		if (req.params.name == 'default') req.params.name = '';
+		var p = proxyRule[req.params.name];
 		if (!p) {
 			res.sendStatus(404);
 			return;
 		}
-		if (req.params.name == 'default')
-			delete proxyRules.default;
-		else
-			delete proxyRules.rules[req.params.name];
+		delete proxyRule[req.params.name];
 		res.status(204).end();
 	})
 	.get("/app/", (req, res, next) => {
