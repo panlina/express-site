@@ -99,7 +99,10 @@ adminApp
 		if (req.params.name == 'default') req.params.name = '';
 		var p = proxyRule[req.params.name];
 		proxyRule[req.params.name] = req.body;
-		res.status(p ? 200 : 201).end();
+		res.status(p ? 200 : 201);
+		if (!p)
+			res.header('Location', `/proxy-rule/${encodeURIComponent(req.params.name)}`);
+		res.end();
 	})
 	.delete("/proxy-rule/:name", (req, res, next) => {
 		if (req.params.name == 'default') req.params.name = '';
@@ -134,7 +137,10 @@ adminApp
 			return;
 		}
 		app[req.params.name] = new App(req.body);
-		res.status(a ? 200 : 201).end();
+		res.status(a ? 200 : 201);
+		if (!a)
+			res.header('Location', `/app/${encodeURIComponent(req.params.name)}`);
+		res.end();
 	})
 	.delete("/app/:name", (req, res, next) => {
 		if (req.params.name == 'default') req.params.name = '';
@@ -205,7 +211,7 @@ adminApp
 				var [[, dir]] = data;
 				var name = path.basename(dir);
 				module[name] = req.body;
-				res.status(201).end();
+				res.status(201).header('Location', `/module/${encodeURIComponent(name)}`).end();
 			});
 		});
 	})
