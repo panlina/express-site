@@ -16,7 +16,6 @@ commander
 	.option('--ssl')
 	.option('--cert <cert>')
 	.option('--key <key>')
-	.option('--proxy-rule <proxy-rule>')
 	.option('--proxy-options <proxy-options>')
 	.option('--app <app>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
@@ -35,10 +34,7 @@ var proxy = httpProxy.createProxyServer(
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
 		undefined
 );
-var proxyRule =
-	commander.proxyRule ?
-		JSON.parse(fs.readFileSync(commander.proxyRule, { encoding: "utf-8" })) :
-		{};
+var proxyRule = Storage('./proxyRule.json');
 var proxyRules = new HttpProxyRules(proxyRule);
 function matchApp(req) {
 	var end = req.url.indexOf('/', 1);
