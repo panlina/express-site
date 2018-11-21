@@ -5,19 +5,18 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var basicAuth = require('express-basic-auth');
 var httpProxy = require('http-proxy');
-var HttpProxyRules = require('http-proxy-rules');
+var HttpProxyRules = require('./HttpProxyRules');
 var createServer = require('create-server');
 var npm = require('global-npm');
 var commander = require('commander');
 var App = require('./App');
 var Storage = require('./Storage');
-var ProxyRules = require('./ProxyRules');
 commander
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
 	.option('--cert <cert>')
 	.option('--key <key>')
-	.option('--proxy-rules <proxy-rules>')
+	.option('--proxy-rule <proxy-rule>')
 	.option('--proxy-options <proxy-options>')
 	.option('--app <app>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
@@ -36,12 +35,11 @@ var proxy = httpProxy.createProxyServer(
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
 		undefined
 );
-var proxyRules = new HttpProxyRules(
-	commander.proxyRules ?
-		JSON.parse(fs.readFileSync(commander.proxyRules, { encoding: "utf-8" })) :
-		{ rules: {} }
-);
-var proxyRule = ProxyRules(proxyRules);
+var proxyRule =
+	commander.proxyRule ?
+		JSON.parse(fs.readFileSync(commander.proxyRule, { encoding: "utf-8" })) :
+		{};
+var proxyRules = new HttpProxyRules(proxyRule);
 function matchApp(req) {
 	var end = req.url.indexOf('/', 1);
 	var name = end != -1 ? req.url.substring(1, end) : '';
