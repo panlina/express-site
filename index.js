@@ -17,7 +17,6 @@ commander
 	.option('--cert <cert>')
 	.option('--key <key>')
 	.option('--proxy-options <proxy-options>')
-	.option('--app <app>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
 	.option('--admin-ssl')
 	.option('--admin-cors <admin-cors>')
@@ -242,9 +241,7 @@ function serialize(app) {
 }
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
-var app = commander.app ? JSON.parse(fs.readFileSync(commander.app, { encoding: "utf-8" })) : {};
+var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments }) });
 var module = Storage('./module.json');
-for (var name in app)
-	app[name] = new App(app[name]);
 for (var name in app)
 	app[name].start(() => { });
