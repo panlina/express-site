@@ -39,10 +39,10 @@ function matchApp(req) {
 	var end = req.url.indexOf('/', 1);
 	var name = end != -1 ? req.url.substring(1, end) : '';
 	var a = app[name];
-	if (a) if (a.port) {
+	if (a) if (a._port) {
 		if (end != -1)
 			req.url = req.url.substr(end);
-		return `http://localhost:${a.port}`;
+		return `http://localhost:${a._port}`;
 	}
 }
 var app = express();
@@ -236,12 +236,13 @@ function serialize(app) {
 		type: app.type,
 		module: app.module,
 		arguments: app.arguments,
+		port: app.port,
 		running: app.running
 	};
 }
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
-var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments }) });
+var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
 var module = Storage('./module.json');
 for (var name in app)
 	app[name].start(() => { });

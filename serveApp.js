@@ -3,7 +3,8 @@ var createServer = require('create-server');
 var commander = require('commander');
 commander
 	.option('--module <module>')
-	.option('--arguments <arguments>', undefined, json => JSON.parse(json));
+	.option('--arguments <arguments>', undefined, json => JSON.parse(json))
+	.option('--port <port>', undefined, Number);
 commander.parse(process.argv);
 process.on('message', message => {
 	switch (message) {
@@ -20,7 +21,7 @@ function start(callback) {
 	var middleware = require(commander.module).apply(undefined, commander.arguments);
 	var app = express().use(middleware);
 	server = createServer(app);
-	server.listen(0, callback);
+	server.listen(commander.port || 0, callback);
 }
 function stop(callback) {
 	server.close(function () {
