@@ -17,12 +17,21 @@ App.prototype.start = function (callback) {
 			this.process.send('start');
 			this.process.on('message', function (message) {
 				$this._port = message;
+				$this.process.on('exit', function () {
+					delete $this._port;
+					delete $this.process;
+				});
 				callback.apply();
 			});
 			break;
 		case 'standalone':
+			var $this = this;
 			this.process = child_process.fork(Module.resolve(this.module), this.arguments);
 			this._port = this.port;
+			this.process.on('exit', function () {
+				delete $this._port;
+				delete $this.process;
+			});
 			callback.apply();
 			break;
 	}
@@ -33,16 +42,12 @@ App.prototype.stop = function (callback) {
 			var $this = this;
 			this.process.send('stop');
 			this.process.on('message', function () {
-				delete $this._port;
 				$this.process.kill();
-				delete $this.process;
 				callback.call();
 			});
 			break;
 		case 'standalone':
-			delete this._port;
 			this.process.kill();
-			delete this.process;
 			callback.call();
 			break;
 	}
