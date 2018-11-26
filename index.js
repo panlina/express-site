@@ -96,7 +96,7 @@ adminApp
 		proxyRule[req.params.name] = req.body;
 		res.status(p ? 200 : 201);
 		if (!p)
-			res.header('Location', `/proxy-rule/${encodeURIComponent(req.params.name)}`);
+			res.header('Location', `/proxy-rule/${encodeURIComponent(req.params.name || 'default')}`);
 		res.end();
 	})
 	.delete("/proxy-rule/:name", (req, res, next) => {
@@ -134,7 +134,7 @@ adminApp
 		app[req.params.name] = new App(req.body);
 		res.status(a ? 200 : 201);
 		if (!a)
-			res.header('Location', `/app/${encodeURIComponent(req.params.name)}`);
+			res.header('Location', `/app/${encodeURIComponent(req.params.name || 'default')}`);
 		res.end();
 	})
 	.delete("/app/:name", (req, res, next) => {
