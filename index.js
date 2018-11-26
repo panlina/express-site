@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var EventEmitter = require('events');
 var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors');
@@ -163,6 +164,10 @@ adminApp
 			return;
 		}
 		a.start(() => {
+			eventEmitter.emit('start', `/app/${encodeURIComponent(req.params.name || 'default')}`);
+			a.process.on('exit', (code, signal) => {
+				eventEmitter.emit('stop', `/app/${encodeURIComponent(req.params.name || 'default')}`, { code, signal });
+			});
 			res.status(204).end();
 		});
 	})
@@ -240,9 +245,32 @@ function serialize(app) {
 		running: app.running
 	};
 }
+var eventEmitter = new EventEmitter();
+adminApp
+	.get("/event/", (req, res, next) => {
+		res.writeHead(200, {
+			"Content-Type": "text/event-stream"
+		});
+		listen('start');
+		listen('stop');
+		function listen(type) {
+			eventEmitter.on(type, listener);
+			res.on('close', () => { eventEmitter.removeListener(type, listener); });
+			function listener(source, data) {
+				res.write(`event: ${type}\n`);
+				res.write(`data: ${source !== undefined ? source : ''}\n`);
+				res.write(`data: ${data !== undefined ? JSON.stringify(data) : ''}\n\n`);
+			}
+		}
+	})
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
 var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
 var module = Storage('./module.json');
-for (var name in app)
-	app[name].start(() => { });
+for (let name in app)
+	app[name].start(() => {
+		eventEmitter.emit('start', `/app/${encodeURIComponent(name || 'default')}`);
+		app[name].process.on('exit', function (code, signal) {
+			eventEmitter.emit('stop', `/app/${encodeURIComponent(name || 'default')}`, { code, signal });
+		});
+	});
