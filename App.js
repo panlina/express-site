@@ -15,7 +15,7 @@ App.prototype.start = function (callback) {
 			var $this = this;
 			this.process = child_process.fork('serveApp.js', ["--module", Module.resolve(this.module), "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
 			this.process.send('start');
-			this.process.on('message', function (message) {
+			this.process.once('message', function (message) {
 				$this._port = message;
 				$this.process.on('exit', function () {
 					delete $this._port;
@@ -41,7 +41,7 @@ App.prototype.stop = function (callback) {
 		case 'middleware':
 			var $this = this;
 			this.process.send('stop');
-			this.process.on('message', function () {
+			this.process.once('message', function () {
 				$this.process.kill();
 				callback.call();
 			});
