@@ -208,7 +208,7 @@ adminApp
 					res.status(500).send(er);
 					return;
 				}
-				var [[, dir]] = data;
+				var [, dir] = data[data.length - 1];
 				var name = path.basename(dir);
 				module[name] = req.body;
 				res.status(201).header('Location', `/module/${encodeURIComponent(name)}`).end();
