@@ -9,7 +9,12 @@ commander.parse(process.argv);
 process.on('message', message => {
 	switch (message) {
 		case 'start':
-			start(() => process.send(server.address().port));
+			start(argument => {
+				if (argument instanceof Error)
+					process.send(`error\n${argument.message}`);
+				else
+					process.send(`succeed\n${server.address().port}`);
+			});
 			break;
 		case 'stop':
 			stop(() => process.send(null));
@@ -22,6 +27,7 @@ function start(callback) {
 	var app = express().use(middleware);
 	server = createServer(app);
 	server.listen(commander.port || 0, callback);
+	server.once('error', callback);
 }
 function stop(callback) {
 	server.close(function () {

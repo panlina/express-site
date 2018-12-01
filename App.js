@@ -16,12 +16,22 @@ App.prototype.start = function (callback) {
 			this.process = child_process.fork('serveApp.js', ["--module", Module.resolve(this.module), "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
 			this.process.send('start');
 			this.process.once('message', function (message) {
-				$this._port = message;
-				$this.process.on('exit', function () {
-					delete $this._port;
-					delete $this.process;
-				});
-				callback.apply();
+				var [status, data] = message.split('\n');
+				switch (status) {
+					case 'succeed':
+						$this._port = +data;
+						$this.process.on('exit', function () {
+							delete $this._port;
+							delete $this.process;
+						});
+						callback.apply();
+						break;
+					case 'error':
+						$this.process.kill();
+						delete $this.process;
+						callback(new Error(data));
+						break;
+				}
 			});
 			break;
 		case 'standalone':

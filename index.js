@@ -163,7 +163,11 @@ adminApp
 			res.status(409).send("The app is already running.");
 			return;
 		}
-		a.start(() => {
+		a.start(e => {
+			if (e instanceof Error) {
+				res.status(500).send(e.message).end();
+				return;
+			}
 			eventEmitter.emit('start', `/app/${encodeURIComponent(req.params.name || 'default')}`);
 			a.process.on('exit', (code, signal) => {
 				eventEmitter.emit('stop', `/app/${encodeURIComponent(req.params.name || 'default')}`, { code, signal });
@@ -268,7 +272,8 @@ adminServer.listen(commander.adminPort);
 var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
 var module = Storage('./module.json');
 for (let name in app)
-	app[name].start(() => {
+	app[name].start(e => {
+		if (e instanceof Error) return;
 		eventEmitter.emit('start', `/app/${encodeURIComponent(name || 'default')}`);
 		app[name].process.on('exit', function (code, signal) {
 			eventEmitter.emit('stop', `/app/${encodeURIComponent(name || 'default')}`, { code, signal });
