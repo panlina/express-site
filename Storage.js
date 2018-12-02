@@ -11,17 +11,19 @@ function Storage(file, construction = {}) {
 	return new Proxy(target, {
 		set: (target, property, value) => {
 			target[property] = value;
-			if (construction.destructor)
-				target = destruct(target);
-			fs.writeFile(file, JSON.stringify(target, undefined, '\t'), 'utf8', err => { if (err) console.log(err); });
+			store();
 		},
 		deleteProperty: (target, property) => {
 			delete target[property];
-			if (construction.destructor)
-				target = destruct(target);
-			fs.writeFile(file, JSON.stringify(target, undefined, '\t'), 'utf8', err => { if (err) console.log(err); });
+			store();
 		}
 	})
+	function store() {
+		var json = target;
+		if (construction.destructor)
+			json = destruct(json);
+		fs.writeFile(file, JSON.stringify(json, undefined, '\t'), 'utf8', err => { if (err) console.log(err); });
+	}
 	function destruct(target) {
 		var json = {};
 		for (var name in target)
