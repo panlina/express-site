@@ -18,11 +18,17 @@ function Storage(file, construction = {}) {
 			store();
 		}
 	})
+	var dirty;
 	function store() {
-		var json = target;
-		if (construction.destructor)
-			json = destruct(json);
-		fs.writeFile(file, JSON.stringify(json, undefined, '\t'), 'utf8', err => { if (err) console.log(err); });
+		if (dirty) return;
+		setTimeout(() => {
+			var json = target;
+			if (construction.destructor)
+				json = destruct(json);
+			fs.writeFile(file, JSON.stringify(json, undefined, '\t'), 'utf8', err => { if (err) console.log(err); });
+			dirty = false;
+		}, 0);
+		dirty = true;
 	}
 	function destruct(target) {
 		var json = {};
