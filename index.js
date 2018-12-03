@@ -110,6 +110,27 @@ adminApp
 		delete proxyRule[req.params.name];
 		res.status(204).end();
 	})
+	.move("/proxy-rule/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var p = proxyRule[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		var destination = req.header('Destination');
+		var destination = destination.substr("/proxy-rule/".length);
+		var destination = decodeURIComponent(destination);
+		if (destination == 'default') destination = '';
+		var q = proxyRule[destination];
+		if (q)
+			if (req.header('Overwrite') == 'F') {
+				res.status(412).end();
+				return;
+			}
+		delete proxyRule[req.params.name];
+		proxyRule[destination] = p;
+		res.status(q ? 204 : 201).end();
+	})
 	.get("/app/", (req, res, next) => {
 		var json = {};
 		for (var name in app)
