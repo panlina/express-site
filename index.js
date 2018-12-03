@@ -173,6 +173,32 @@ adminApp
 		delete app[req.params.name];
 		res.status(204).end();
 	})
+	.move("/app/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var a = app[req.params.name];
+		if (!a) {
+			res.sendStatus(404);
+			return;
+		}
+		var destination = req.header('Destination');
+		var destination = destination.substr("/app/".length);
+		var destination = decodeURIComponent(destination);
+		if (destination == 'default') destination = '';
+		var b = app[destination];
+		if (b) {
+			if (req.header('Overwrite') == 'F') {
+				res.status(412).end();
+				return;
+			}
+			if (b.running) {
+				res.status(409).send("The app is running. Stop it and try again.");
+				return;
+			}
+		}
+		delete app[req.params.name];
+		app[destination] = a;
+		res.status(b ? 204 : 201).end();
+	})
 	.post("/app/:name/start", (req, res, next) => {
 		if (req.params.name == 'default') req.params.name = '';
 		var a = app[req.params.name];
