@@ -2,7 +2,7 @@ var fs = require('fs');
 function Storage(file, construction = {}) {
 	try {
 		var target = JSON.parse(fs.readFileSync(file, 'utf8'));
-		if (construction.constructor)
+		if (construction.hasOwnProperty('constructor'))
 			construct(target);
 	} catch (e) {
 		var target = {};
