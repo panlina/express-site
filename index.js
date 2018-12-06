@@ -36,6 +36,12 @@ var proxy = httpProxy.createProxyServer(
 );
 var proxyRule = Storage('./proxyRule.json');
 var proxyRules = new HttpProxyRules(proxyRule);
+var vhost = Storage('./vhost.json');
+function matchHost(req) {
+	var host = req.header('Host');
+	var [host, port] = host.split(':');
+	return vhost[host];
+}
 function matchApp(req) {
 	var end = req.url.indexOf('/', 1);
 	var name = end != -1 ? req.url.substring(1, end) : '';
@@ -48,7 +54,7 @@ function matchApp(req) {
 }
 var app = express();
 app.use(function (req, res, next) {
-	var target = matchApp(req) || proxyRules.match(req);
+	var target = matchHost(req) || matchApp(req) || proxyRules.match(req);
 	if (target)
 		proxy.web(req, res, { target: target }, function (e) {
 			switch (e.code) {
@@ -132,6 +138,61 @@ adminApp
 		res.status(q ? 204 : 201);
 		if (!q)
 			res.header('Location', `/proxy-rule/${encodeURIComponent(destination || 'default')}`);
+		res.end();
+	})
+	.get("/vhost/", (req, res, next) => {
+		res.json(vhost);
+	})
+	.get("/vhost/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var p = vhost[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		res.json(p);
+	})
+	.put("/vhost/:name", jsonBodyParser, (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var p = vhost[req.params.name];
+		vhost[req.params.name] = req.body;
+		res.status(p ? 200 : 201);
+		if (!p)
+			res.header('Location', `/vhost/${encodeURIComponent(req.params.name || 'default')}`);
+		res.end();
+	})
+	.delete("/vhost/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var p = vhost[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		delete vhost[req.params.name];
+		res.status(204).end();
+	})
+	.move("/vhost/:name", (req, res, next) => {
+		if (req.params.name == 'default') req.params.name = '';
+		var p = vhost[req.params.name];
+		if (!p) {
+			res.sendStatus(404);
+			return;
+		}
+		var destination = req.header('Destination');
+		var destination = destination.substr("/vhost/".length);
+		var destination = decodeURIComponent(destination);
+		if (destination == 'default') destination = '';
+		var q = vhost[destination];
+		if (q)
+			if (req.header('Overwrite') == 'F') {
+				res.status(412).end();
+				return;
+			}
+		delete vhost[req.params.name];
+		vhost[destination] = p;
+		res.status(q ? 204 : 201);
+		if (!q)
+			res.header('Location', `/vhost/${encodeURIComponent(destination || 'default')}`);
 		res.end();
 	})
 	.get("/app/", (req, res, next) => {
