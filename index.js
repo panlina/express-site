@@ -129,7 +129,10 @@ adminApp
 			}
 		delete proxyRule[req.params.name];
 		proxyRule[destination] = p;
-		res.status(q ? 204 : 201).end();
+		res.status(q ? 204 : 201);
+		if (!q)
+			res.header('Location', `/proxy-rule/${encodeURIComponent(destination || 'default')}`);
+		res.end();
 	})
 	.get("/app/", (req, res, next) => {
 		var json = {};
@@ -197,7 +200,10 @@ adminApp
 		}
 		delete app[req.params.name];
 		app[destination] = a;
-		res.status(b ? 204 : 201).end();
+		res.status(b ? 204 : 201);
+		if (!b)
+			res.header('Location', `/app/${encodeURIComponent(destination || 'default')}`);
+		res.end();
 	})
 	.post("/app/:name/start", (req, res, next) => {
 		if (req.params.name == 'default') req.params.name = '';
