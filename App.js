@@ -6,6 +6,7 @@ function App(argument) {
 	this.module = argument.module;
 	this.arguments = argument.arguments;
 	this.port = argument.port;
+	this.mount = argument.mount;
 	this.process;
 	this._port;
 }

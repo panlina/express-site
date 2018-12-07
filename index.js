@@ -34,6 +34,8 @@ var proxy = httpProxy.createProxyServer(
 		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
 		undefined
 );
+var site = JSON.parse(fs.readFileSync('./site.json', 'utf8'));
+site.appDomain = new RegExp(site.appDomain);
 var proxyRule = Storage('./proxyRule.json');
 var proxyRules = new HttpProxyRules(proxyRule);
 var vhost = Storage('./vhost.json');
@@ -42,11 +44,22 @@ function matchHost(req) {
 	var [host, port] = host.split(':');
 	return vhost[host];
 }
-function matchApp(req) {
+function matchAppDomain(req) {
+	var host = req.header('Host');
+	var [host, port] = host.split(':');
+	var match = host.match(site.appDomain);
+	if (match) {
+		var name = match[1];
+		var a = app[name];
+		if (a) if (a.mount == 'domain') if (a._port)
+			return `http://localhost:${a._port}`;
+	}
+}
+function matchAppDirectory(req) {
 	var end = req.url.indexOf('/', 1);
 	var name = end != -1 ? req.url.substring(1, end) : '';
 	var a = app[name];
-	if (a) if (a._port) {
+	if (a) if (a.mount == 'directory') if (a._port) {
 		if (end != -1)
 			req.url = req.url.substr(end);
 		return `http://localhost:${a._port}`;
@@ -54,7 +67,7 @@ function matchApp(req) {
 }
 var app = express();
 app.use(function (req, res, next) {
-	var target = matchHost(req) || matchApp(req) || proxyRules.match(req);
+	var target = matchHost(req) || matchAppDomain(req) || matchAppDirectory(req) || proxyRules.match(req);
 	if (target)
 		proxy.web(req, res, { target: target }, function (e) {
 			switch (e.code) {
@@ -360,6 +373,7 @@ function serialize(app) {
 		module: app.module,
 		arguments: app.arguments,
 		port: app.port,
+		mount: app.mount,
 		running: app.running
 	};
 }
@@ -383,7 +397,7 @@ adminApp
 	})
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
-var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
+var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port, mount: app.mount }) });
 var module = Storage('./module.json');
 for (let name in app)
 	app[name].start(e => {
