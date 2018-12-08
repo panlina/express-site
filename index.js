@@ -13,25 +13,27 @@ var commander = require('commander');
 var App = require('./App');
 var Storage = require('./Storage');
 commander
+	.arguments('<dir>')
+	.action(dir => { commander.dir = dir; })
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
 	.option('--cert <cert>')
 	.option('--key <key>')
-	.option('--proxy-options <proxy-options>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
-	.option('--admin-ssl')
-	.option('--admin-cors <admin-cors>')
-	.option('--admin-basic-auth <admin-basic-auth>');
+	.option('--admin-ssl');
 commander.parse(process.argv);
 if (commander.cert && commander.key)
 	var serverOptions = {
 		cert: fs.readFileSync(commander.cert),
 		key: fs.readFileSync(commander.key)
 	};
+process.chdir(commander.dir);
+if (!fs.existsSync('require.resolve.js'))
+	fs.writeFileSync('require.resolve.js', fs.readFileSync(path.join(__dirname, 'require.resolve.js')));
 var jsonBodyParser = bodyParser.json({ strict: false });
 var proxy = httpProxy.createProxyServer(
-	commander.proxyOptions ?
-		JSON.parse(fs.readFileSync(commander.proxyOptions, { encoding: "utf-8" })) :
+	fs.existsSync('./proxyOptions.json') ?
+		JSON.parse(fs.readFileSync('./proxyOptions.json', { encoding: "utf-8" })) :
 		undefined
 );
 var site = JSON.parse(fs.readFileSync('./site.json', 'utf8'));
@@ -91,12 +93,12 @@ app.use(function (req, res, next) {
 var server = createServer(app, commander.ssl ? serverOptions : undefined);
 server.listen(commander.port || (commander.ssl ? 443 : 80));
 var adminApp = express();
-if (commander.adminCors)
+if (fs.existsSync('./adminCors.json'))
 	adminApp
-		.use(cors(JSON.parse(fs.readFileSync(commander.adminCors, { encoding: "utf-8" }))));
-if (commander.adminBasicAuth)
+		.use(cors(JSON.parse(fs.readFileSync('./adminCors.json', { encoding: "utf-8" }))));
+if (fs.existsSync('./adminBasicAuth.json'))
 	adminApp
-		.use(basicAuth(JSON.parse(fs.readFileSync(commander.adminBasicAuth, { encoding: "utf-8" }))));
+		.use(basicAuth(JSON.parse(fs.readFileSync('./adminBasicAuth.json', { encoding: "utf-8" }))));
 adminApp
 	.get("/proxy-rule/", (req, res, next) => {
 		res.json(proxyRule);
