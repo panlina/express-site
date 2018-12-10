@@ -14,7 +14,7 @@ var App = require('./App');
 var Storage = require('./Storage');
 commander
 	.arguments('<dir>')
-	.action(dir => { commander.dir = dir; })
+	.action(dir => { global.dir = dir; })
 	.option('--port <port>', undefined, Number)
 	.option('--ssl')
 	.option('--cert <cert>')
@@ -27,20 +27,19 @@ if (commander.cert && commander.key)
 		cert: fs.readFileSync(commander.cert),
 		key: fs.readFileSync(commander.key)
 	};
-process.chdir(commander.dir);
-if (!fs.existsSync('require.resolve.js'))
-	fs.writeFileSync('require.resolve.js', fs.readFileSync(path.join(__dirname, 'require.resolve.js')));
+if (!fs.existsSync(path.join(global.dir, 'require.resolve.js')))
+	fs.writeFileSync(path.join(global.dir, 'require.resolve.js'), fs.readFileSync(path.join(__dirname, 'require.resolve.js')));
 var jsonBodyParser = bodyParser.json({ strict: false });
 var proxy = httpProxy.createProxyServer(
-	fs.existsSync('./proxyOptions.json') ?
-		JSON.parse(fs.readFileSync('./proxyOptions.json', { encoding: "utf-8" })) :
+	fs.existsSync(path.join(global.dir, 'proxyOptions.json')) ?
+		JSON.parse(fs.readFileSync(path.join(global.dir, 'proxyOptions.json'), { encoding: "utf-8" })) :
 		undefined
 );
-var site = JSON.parse(fs.readFileSync('./site.json', 'utf8'));
+var site = JSON.parse(fs.readFileSync(path.join(global.dir, 'site.json'), 'utf8'));
 site.appDomain = new RegExp(site.appDomain);
-var proxyRule = Storage('./proxyRule.json');
+var proxyRule = Storage(path.join(global.dir, 'proxyRule.json'));
 var proxyRules = new HttpProxyRules(proxyRule);
-var vhost = Storage('./vhost.json');
+var vhost = Storage(path.join(global.dir, 'vhost.json'));
 function matchHost(req) {
 	var host = req.header('Host');
 	var [host, port] = host.split(':');
@@ -93,12 +92,12 @@ app.use(function (req, res, next) {
 var server = createServer(app, commander.ssl ? serverOptions : undefined);
 server.listen(commander.port || (commander.ssl ? 443 : 80));
 var adminApp = express();
-if (fs.existsSync('./adminCors.json'))
+if (fs.existsSync(path.join(global.dir, 'adminCors.json')))
 	adminApp
-		.use(cors(JSON.parse(fs.readFileSync('./adminCors.json', { encoding: "utf-8" }))));
-if (fs.existsSync('./adminBasicAuth.json'))
+		.use(cors(JSON.parse(fs.readFileSync(path.join(global.dir, 'adminCors.json'), { encoding: "utf-8" }))));
+if (fs.existsSync(path.join(global.dir, 'adminBasicAuth.json')))
 	adminApp
-		.use(basicAuth(JSON.parse(fs.readFileSync('./adminBasicAuth.json', { encoding: "utf-8" }))));
+		.use(basicAuth(JSON.parse(fs.readFileSync(path.join(global.dir, 'adminBasicAuth.json'), { encoding: "utf-8" }))));
 adminApp
 	.get("/proxy-rule/", (req, res, next) => {
 		res.json(proxyRule);
@@ -331,7 +330,7 @@ adminApp
 		res.json(m);
 	})
 	.post("/module/", jsonBodyParser, (req, res, next) => {
-		npm.load({ prefix: "./site_modules" }, function (er) {
+		npm.load({ prefix: path.join(global.dir, "site_modules") }, function (er) {
 			if (er) {
 				res.status(500).send(er);
 				return;
@@ -354,7 +353,7 @@ adminApp
 			res.sendStatus(404);
 			return;
 		}
-		npm.load({ prefix: "./site_modules" }, function (er) {
+		npm.load({ prefix: path.join(global.dir, "site_modules") }, function (er) {
 			if (er) {
 				res.status(500).send(er);
 				return;
@@ -399,8 +398,8 @@ adminApp
 	})
 var adminServer = createServer(adminApp, commander.adminSsl ? serverOptions : undefined);
 adminServer.listen(commander.adminPort);
-var app = Storage('./app.json', { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port, mount: app.mount }) });
-var module = Storage('./module.json');
+var app = Storage(path.join(global.dir, 'app.json'), { constructor: App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port, mount: app.mount }) });
+var module = Storage(path.join(global.dir, 'module.json'));
 for (let name in app)
 	app[name].start(e => {
 		if (e instanceof Error) return;

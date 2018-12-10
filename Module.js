@@ -4,6 +4,6 @@ module.exports.resolve = spec => {
 		var name = spec.substr("site:".length);
 		spec = `./site_modules/node_modules/${name}`;
 	}
-	var resolve = require(path.resolve('require.resolve.js'));
+	var resolve = require(path.resolve(path.join(global.dir, 'require.resolve.js')));
 	return resolve(spec);
 };
