@@ -8,5 +8,6 @@
     "create-server": "panlina/create-server",
     "global-npm": "*",
     "commander": "*"
-  }
+  },
+  "bin": "./cli.js"
 }

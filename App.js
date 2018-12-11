@@ -3,6 +3,7 @@ var child_process = require('child_process');
 var Module = require('./Module');
 
 function App(argument) {
+	this.site;
 	this.type = argument.type;
 	this.module = argument.module;
 	this.arguments = argument.arguments;
@@ -15,7 +16,7 @@ App.prototype.start = function (callback) {
 	switch (this.type) {
 		case 'middleware':
 			var $this = this;
-			this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", Module.resolve(this.module), "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
+			this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", Module.resolve(this.site.config.dir, this.module), "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
 			this.process.send('start');
 			this.process.once('message', function (message) {
 				var [status, data] = message.split('\n');
@@ -38,7 +39,7 @@ App.prototype.start = function (callback) {
 			break;
 		case 'standalone':
 			var $this = this;
-			this.process = child_process.fork(Module.resolve(this.module), this.arguments);
+			this.process = child_process.fork(Module.resolve(this.site.config.dir, this.module), this.arguments);
 			this._port = this.port;
 			this.process.on('exit', function () {
 				delete $this._port;
@@ -67,5 +68,4 @@ App.prototype.stop = function (callback) {
 Object.defineProperty(App.prototype, 'running', {
 	get: function () { return this.process != undefined; }
 });
-
 module.exports = App;
