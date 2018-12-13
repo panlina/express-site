@@ -9,5 +9,12 @@
     "global-npm": "*",
     "commander": "*"
   },
+  "devDependencies": {
+    "mocha": "^5.2.0",
+    "request": "*"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
   "bin": "./cli.js"
 }
