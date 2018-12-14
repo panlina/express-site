@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "dependencies": {
     "express": "*",
+    "http-proxy": "*",
+    "http-proxy-rules": "*",
     "cors": "*",
     "express-basic-auth": "*",
     "create-server": "panlina/create-server",
