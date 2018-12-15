@@ -114,6 +114,14 @@ class Site {
 		this.app = app;
 		this.module = module;
 		this.eventEmitter = eventEmitter;
+		this.server = server;
+		this.adminServer = adminServer;
+	}
+	stop() {
+		for (var name in this.app)
+			this.app[name].stop(() => { });
+		this.server.close();
+		this.adminServer.close();
 	}
 }
 module.exports = Site;
