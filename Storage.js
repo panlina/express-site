@@ -6,7 +6,6 @@ function Storage(file, construction = {}) {
 			construct(target);
 	} catch (e) {
 		var target = {};
-		fs.writeFileSync(file, JSON.stringify(target), 'utf8');
 	}
 	return new Proxy(target, {
 		set: (target, property, value) => {
