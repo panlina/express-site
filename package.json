@@ -1,6 +1,8 @@
 {
   "name": "express-site",
   "version": "0.0.0",
+  "description": "A host for node/express web applications, with a RESTful admin API.",
+  "engines": { "node": ">=6" },
   "dependencies": {
     "express": "*",
     "http-proxy": "*",
