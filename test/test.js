@@ -29,3 +29,23 @@ it('proxy should work', function (done) {
 		});
 	});
 });
+it('app should work', function (done) {
+	var site = new Site({ dir: "test/site/", port: 8080, adminPort: 9000 });
+	site.start();
+	var app = {
+		"type": "standalone",
+		"module": "./standalone.js",
+		"arguments": [],
+		"mount": "directory"
+	};
+	request.put("http://localhost:9000/app/a", { json: true, body: app }, (error, response) => {
+		request.post("http://localhost:9000/app/a/start", (error, response) => {
+			request.get("http://localhost:8080/a", (error, response) => {
+				assert(response);
+				assert.equal(response.body, "42");
+				site.stop();
+				done();
+			});
+		});
+	});
+});
