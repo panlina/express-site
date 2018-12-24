@@ -142,7 +142,7 @@ function AdminApp(site, { cors, auth }) {
 				res.status(409).send("The app is running. Stop it and try again.");
 				return;
 			}
-			site.app[req.params.name] = new this.App(req.body);
+			site.app[req.params.name] = new site.App(req.body);
 			res.status(a ? 200 : 201);
 			if (!a)
 				res.header('Location', `/app/${encodeURIComponent(req.params.name || 'default')}`);
