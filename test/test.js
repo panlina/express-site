@@ -2,6 +2,7 @@ var assert = require('assert');
 var http = require("http");
 var request = require('request');
 var Site = require('..');
+var Module = require('../Module');
 it('should start and stop', function (done) {
 	var site = new Site({ dir: "test/site/", port: 8080, adminPort: 9000 });
 	site.start();
@@ -64,5 +65,16 @@ it('app should work', function (done) {
 				});
 			}, 100);
 		});
+	});
+});
+it('module should work', function (done) {
+	this.timeout = 10000;
+	var site = new Site({ dir: "test/site/", port: 8080, adminPort: 9000 });
+	site.start();
+	request.post("http://localhost:9000/module/", { json: true, body: { source: "./test/site/a" } }, (error, response) => {
+		var module = Module.resolve(site.config.dir, "site:a");
+		assert.equal(require(module), 42);
+		site.stop();
+		done();
 	});
 });
