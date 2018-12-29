@@ -1,6 +1,5 @@
 var path = require('path');
 var child_process = require('child_process');
-var Module = require('./Module');
 
 function App(argument) {
 	this.site;
@@ -16,7 +15,7 @@ App.prototype.start = function (callback) {
 	switch (this.type) {
 		case 'middleware':
 			var $this = this;
-			try { var module = Module.resolve(this.site.config.dir, this.module); }
+			try { var module = this.site.Module.resolve(this.module); }
 			catch (e) { callback(e); return; }
 			this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", module, "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
 			this.process.send('start');
@@ -41,7 +40,7 @@ App.prototype.start = function (callback) {
 			break;
 		case 'standalone':
 			var $this = this;
-			try { var module = Module.resolve(this.site.config.dir, this.module); }
+			try { var module = this.site.Module.resolve(this.module); }
 			catch (e) { callback(e); return; }
 			this.process = child_process.fork(module, this.arguments);
 			this._port = this.port;

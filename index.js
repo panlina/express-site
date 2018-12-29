@@ -7,6 +7,7 @@ var basicAuth = require('express-basic-auth');
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('./HttpProxyRules');
 var createServer = require('create-server');
+var Module = require('./Module');
 var App = require('./App');
 var AdminApp = require('./AdminApp');
 var Storage = require('./Storage');
@@ -14,6 +15,7 @@ class Site {
 	constructor(config) {
 		this.config = config;
 		var $this = this;
+		this.Module = Module(this);
 		this.App = function (argument) {
 			var app = new App(argument);
 			app.site = $this;
