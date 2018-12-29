@@ -71,7 +71,7 @@ it('module should work', function (done) {
 	this.timeout = 10000;
 	var site = new Site({ dir: "test/site/", port: 8080, adminPort: 9000 });
 	site.start();
-	request.post("http://localhost:9000/module/", { json: true, body: { source: "./test/site/a" } }, (error, response) => {
+	request.post("http://localhost:9000/module/", { json: true, body: { source: "./a" } }, (error, response) => {
 		var module = Module.resolve(site.config.dir, "site:a");
 		assert.equal(require(module), 42);
 		site.stop();

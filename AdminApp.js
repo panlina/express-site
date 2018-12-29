@@ -246,7 +246,10 @@ function AdminApp(site, { cors, auth }) {
 					res.status(500).send(er);
 					return;
 				}
-				npm.commands.install([req.body.source], function (er, data) {
+				var source = req.body.source;
+				if (source[0] == '.')
+					source = path.join(site.config.dir, source);
+				npm.commands.install([source], function (er, data) {
 					if (er) {
 						res.status(500).send(er);
 						return;
