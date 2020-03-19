@@ -14,7 +14,7 @@ commander
 commander.parse(process.argv);
 var config = {
 	dir: global.dir,
-	port: commander.port,
+	port: commander.port != undefined ? commander.port : commander.ssl ? 443 : 80,
 	ssl: commander.ssl,
 	cert: commander.cert,
 	key: commander.key,

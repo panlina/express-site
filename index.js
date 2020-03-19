@@ -91,7 +91,7 @@ class Site {
 				next();
 		});
 		var server = createServer(app, config.ssl ? serverOptions : undefined);
-		server.listen(config.port || (config.ssl ? 443 : 80));
+		server.listen(config.port);
 		var eventEmitter = new EventEmitter();
 		var adminApp = new AdminApp(this, {
 			cors: fs.existsSync(path.join(config.dir, 'adminCors.json')) ?
