@@ -16,7 +16,7 @@ function AdminApp(site, { cors, auth }) {
 		.get("/proxy-rule/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.proxyRule[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -26,15 +26,15 @@ function AdminApp(site, { cors, auth }) {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.proxyRule[req.params.name];
 			site.proxyRule[req.params.name] = req.body;
-			res.status(p ? 200 : 201);
-			if (!p)
+			res.status(p != undefined ? 200 : 201);
+			if (p == undefined)
 				res.header('Location', `/proxy-rule/${encodeURIComponent(req.params.name || 'default')}`);
 			res.end();
 		})
 		.delete("/proxy-rule/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.proxyRule[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -44,7 +44,7 @@ function AdminApp(site, { cors, auth }) {
 		.move("/proxy-rule/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.proxyRule[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -53,15 +53,15 @@ function AdminApp(site, { cors, auth }) {
 			var destination = decodeURIComponent(destination);
 			if (destination == 'default') destination = '';
 			var q = site.proxyRule[destination];
-			if (q)
+			if (q != undefined)
 				if (req.header('Overwrite') == 'F') {
 					res.status(412).end();
 					return;
 				}
 			delete site.proxyRule[req.params.name];
 			site.proxyRule[destination] = p;
-			res.status(q ? 204 : 201);
-			if (!q)
+			res.status(q != undefined ? 204 : 201);
+			if (q == undefined)
 				res.header('Location', `/proxy-rule/${encodeURIComponent(destination || 'default')}`);
 			res.end();
 		})
@@ -71,7 +71,7 @@ function AdminApp(site, { cors, auth }) {
 		.get("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.vhost[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -81,15 +81,15 @@ function AdminApp(site, { cors, auth }) {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.vhost[req.params.name];
 			site.vhost[req.params.name] = req.body;
-			res.status(p ? 200 : 201);
-			if (!p)
+			res.status(p != undefined ? 200 : 201);
+			if (p == undefined)
 				res.header('Location', `/vhost/${encodeURIComponent(req.params.name || 'default')}`);
 			res.end();
 		})
 		.delete("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.vhost[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -99,7 +99,7 @@ function AdminApp(site, { cors, auth }) {
 		.move("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
 			var p = site.vhost[req.params.name];
-			if (!p) {
+			if (p == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -108,15 +108,15 @@ function AdminApp(site, { cors, auth }) {
 			var destination = decodeURIComponent(destination);
 			if (destination == 'default') destination = '';
 			var q = site.vhost[destination];
-			if (q)
+			if (q != undefined)
 				if (req.header('Overwrite') == 'F') {
 					res.status(412).end();
 					return;
 				}
 			delete site.vhost[req.params.name];
 			site.vhost[destination] = p;
-			res.status(q ? 204 : 201);
-			if (!q)
+			res.status(q != undefined ? 204 : 201);
+			if (q == undefined)
 				res.header('Location', `/vhost/${encodeURIComponent(destination || 'default')}`);
 			res.end();
 		})
