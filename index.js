@@ -85,7 +85,7 @@ class Site {
 						default:
 							res.status(500);
 					}
-					res.send(e);
+					res.contentType('text/plain').send(e.message);
 				});
 			else
 				next();
