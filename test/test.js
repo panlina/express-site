@@ -1,10 +1,14 @@
 var assert = require('assert');
 var http = require("http");
 var request = require('request');
+var ncp = require('ncp');
+var rimraf = require('rimraf');
 var Site = require('..');
 var Module = require('../Module');
+beforeEach(done => { ncp('test/site', 'test/site0', done); });
+afterEach(done => { rimraf('test/site0', done); });
 it('should start and stop', function (done) {
-	var site = new Site({ dir: "test/site/" });
+	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	request.get(`http://localhost:${port}`, (error, response) => {
@@ -17,7 +21,7 @@ it('should start and stop', function (done) {
 	});
 });
 it('proxy should work', function (done) {
-	var site = new Site({ dir: "test/site/" });
+	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
@@ -34,7 +38,7 @@ it('proxy should work', function (done) {
 	});
 });
 it('vhost should work', function (done) {
-	var site = new Site({ dir: "test/site/" });
+	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
@@ -51,7 +55,7 @@ it('vhost should work', function (done) {
 	});
 });
 it('app should work', function (done) {
-	var site = new Site({ dir: "test/site/" });
+	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
@@ -77,7 +81,7 @@ it('app should work', function (done) {
 });
 it('module should work', function (done) {
 	this.timeout(10000);
-	var site = new Site({ dir: "test/site/" });
+	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var adminPort = site.adminServer.address().port;
 	request.post(`http://localhost:${adminPort}/module/`, { json: true, body: { source: "./a" } }, (error, response) => {
