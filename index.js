@@ -59,8 +59,8 @@ class Site {
 		}
 		function matchAppDirectory(req) {
 			var end = req.url.indexOf('/', 1);
-			var name = end != -1 ? req.url.substring(1, end) : '';
-			var a = app[name];
+			var name = req.url.substring(1, end != -1 ? end : undefined);
+			var a = app[name] || app[''];
 			if (a) if (a.mount == 'directory') if (a._port) {
 				if (end != -1)
 					req.url = req.url.substr(end);
