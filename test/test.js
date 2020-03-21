@@ -59,6 +59,7 @@ it('app should work', function (done) {
 		"type": "standalone",
 		"module": "./standalone.js",
 		"arguments": [],
+		"port": 8008,
 		"mount": "directory"
 	};
 	request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app }, (error, response) => {
