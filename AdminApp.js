@@ -70,26 +70,26 @@ function AdminApp(site, { cors, auth }) {
 		})
 		.get("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
-			var p = site.vhost[req.params.name];
-			if (p == undefined) {
+			var h = site.vhost[req.params.name];
+			if (h == undefined) {
 				res.sendStatus(404);
 				return;
 			}
-			res.json(p);
+			res.json(h);
 		})
 		.put("/vhost/:name", jsonBodyParser, (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
-			var p = site.vhost[req.params.name];
+			var h = site.vhost[req.params.name];
 			site.vhost[req.params.name] = req.body;
-			res.status(p != undefined ? 200 : 201);
-			if (p == undefined)
+			res.status(h != undefined ? 200 : 201);
+			if (h == undefined)
 				res.header('Location', `/vhost/${encodeURIComponent(req.params.name || 'default')}`);
 			res.end();
 		})
 		.delete("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
-			var p = site.vhost[req.params.name];
-			if (p == undefined) {
+			var h = site.vhost[req.params.name];
+			if (h == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -98,8 +98,8 @@ function AdminApp(site, { cors, auth }) {
 		})
 		.move("/vhost/:name", (req, res, next) => {
 			if (req.params.name == 'default') req.params.name = '';
-			var p = site.vhost[req.params.name];
-			if (p == undefined) {
+			var h = site.vhost[req.params.name];
+			if (h == undefined) {
 				res.sendStatus(404);
 				return;
 			}
@@ -107,16 +107,16 @@ function AdminApp(site, { cors, auth }) {
 			var destination = destination.substr("/vhost/".length);
 			var destination = decodeURIComponent(destination);
 			if (destination == 'default') destination = '';
-			var q = site.vhost[destination];
-			if (q != undefined)
+			var g = site.vhost[destination];
+			if (g != undefined)
 				if (req.header('Overwrite') == 'F') {
 					res.status(412).end();
 					return;
 				}
 			delete site.vhost[req.params.name];
-			site.vhost[destination] = p;
-			res.status(q != undefined ? 204 : 201);
-			if (q == undefined)
+			site.vhost[destination] = h;
+			res.status(g != undefined ? 204 : 201);
+			if (g == undefined)
 				res.header('Location', `/vhost/${encodeURIComponent(destination || 'default')}`);
 			res.end();
 		})
