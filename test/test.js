@@ -35,12 +35,18 @@ it('proxy should work', function (done) {
 	var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); })
 	targetServer.listen(8008);
 	request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "http://localhost:8008" }, (error, response) => {
+		assert.equal(response.statusCode, 201);
 		request.get(`http://localhost:${port}/a`, (error, response) => {
-			assert(response);
 			assert.equal(response.body, "42");
-			targetServer.close();
-			site.stop();
-			done();
+			request.delete(`http://localhost:${adminPort}/proxy-rule/%2fa`, (error, response) => {
+				assert.equal(response.statusCode, 204);
+				request.get(`http://localhost:${port}/a`, (error, response) => {
+					assert.equal(response.statusCode, 404);
+					targetServer.close();
+					site.stop();
+					done();
+				});
+			});
 		});
 	});
 });
