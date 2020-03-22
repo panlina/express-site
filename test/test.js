@@ -11,12 +11,19 @@ it('should start and stop', function (done) {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
+	var adminPort = site.adminServer.address().port;
 	request.get(`http://localhost:${port}`, (error, response) => {
 		assert(response);
-		site.stop();
-		request.get(`http://localhost:${port}`, (error, response) => {
-			assert(error);
-			done();
+		request.get(`http://localhost:${adminPort}`, (error, response) => {
+			assert(response);
+			site.stop();
+			request.get(`http://localhost:${port}`, (error, response) => {
+				assert(error);
+				request.get(`http://localhost:${adminPort}`, (error, response) => {
+					assert(error);
+					done();
+				});
+			});
 		});
 	});
 });
