@@ -116,9 +116,17 @@ it('module should work', function (done) {
 	site.start();
 	var adminPort = site.adminServer.address().port;
 	request.post(`http://localhost:${adminPort}/module/`, { json: true, body: { source: "./a" } }, (error, response) => {
-		var module = site.Module.resolve("site:a");
-		assert.equal(require(module), 42);
-		site.stop();
-		done();
+		assert.equal(response.statusCode, 201);
+		request.get(`http://localhost:${adminPort}/module/a`, { json: true }, (error, response) => {
+			assert.deepEqual(response.body, { source: "./a" });
+			request.delete(`http://localhost:${adminPort}/module/a`, (error, response) => {
+				assert.equal(response.statusCode, 204);
+				request.get(`http://localhost:${adminPort}/module/a`, (error, response) => {
+					assert.equal(response.statusCode, 404);
+					site.stop();
+					done();
+				});
+			});
+		});
 	});
 });
