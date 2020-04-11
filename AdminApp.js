@@ -288,7 +288,6 @@ function AdminApp(site, { cors, auth }) {
 			module: app.module,
 			arguments: app.arguments,
 			port: app.port,
-			mount: app.mount,
 			running: app.running
 		};
 	}

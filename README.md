@@ -5,4 +5,3 @@ Quickly turn your server into a website/gateway. Easily add/remove apps. Good fo
 
 Support:
 - proxy based on domain or path
-- app mounted at subdomain or subdirectory

@@ -36,8 +36,6 @@ class Site {
 				JSON.parse(fs.readFileSync(path.join(config.dir, 'proxyOptions.json'), { encoding: "utf-8" })) :
 				undefined
 		);
-		var site = JSON.parse(fs.readFileSync(path.join(config.dir, 'site.json'), 'utf8'));
-		site.appDomain = new RegExp(site.appDomain);
 		var proxyRule = Storage(path.join(config.dir, 'proxyRule.json'));
 		var proxyRules = new HttpProxyRules(proxyRule);
 		var vhost = Storage(path.join(config.dir, 'vhost.json'));
@@ -46,31 +44,22 @@ class Site {
 			var [host, port] = host.split(':');
 			return vhost[host];
 		}
-		function matchAppDomain(req) {
-			var host = req.header('Host');
-			var [host, port] = host.split(':');
-			var match = host.match(site.appDomain);
-			if (match) {
-				var name = match[1];
-				var a = app[name];
-				if (a) if (a.mount == 'domain') if (a._port)
-					return `http://localhost:${a._port}`;
-			}
-		}
-		function matchAppDirectory(req) {
-			var end = req.url.indexOf('/', 1);
-			var name = req.url.substring(1, end != -1 ? end : undefined);
-			var a = app[name] || app[''];
-			if (a) if (a.mount == 'directory') if (a._port) {
-				if (end != -1)
-					req.url = req.url.substr(end);
-				return `http://localhost:${a._port}`;
-			}
-		}
 		var app = express();
 		app.use(function (req, res, next) {
-			var target = matchHost(req) || matchAppDomain(req) || matchAppDirectory(req) || proxyRules.match(req);
-			if (target)
+			var target = matchHost(req) || proxyRules.match(req);
+			if (target) {
+				if (target.startsWith('site:')) {
+					var name = target.substr("site:".length);
+					var a = app[name];
+					if (a && a._port)
+						target = `http://localhost:${a._port}`;
+					else {
+						res.status(404)
+							.contentType('text/plain')
+							.send("App not found.");
+						return;
+					}
+				}
 				proxy.web(req, res, { target: target }, function (e) {
 					switch (e.code) {
 						case "ENOTFOUND":
@@ -87,6 +76,7 @@ class Site {
 					}
 					res.contentType('text/plain').send(e.message);
 				});
+			}
 			else
 				next();
 		});
@@ -101,7 +91,7 @@ class Site {
 		});
 		var adminServer = createServer(adminApp, config.adminSsl ? serverOptions : undefined);
 		adminServer.listen(config.adminPort);
-		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port, mount: app.mount }) });
+		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
 		var module = Storage(path.join(config.dir, 'module.json'));
 		for (let name in app)
 			app[name].start(e => {

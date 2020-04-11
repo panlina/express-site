@@ -82,31 +82,33 @@ it('app should work', function (done) {
 		"type": "standalone",
 		"module": "./standalone.js",
 		"arguments": [],
-		"port": 8008,
-		"mount": "directory"
+		"port": 8008
 	};
 	request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app }, (error, response) => {
 		assert.equal(response.statusCode, 201);
 		request.post(`http://localhost:${adminPort}/app/a/start`, (error, response) => {
 			assert.equal(response.statusCode, 204);
-			setTimeout(() => {
-				request.get(`http://localhost:${port}/a`, (error, response) => {
-					assert.equal(response.body, "42");
-					request.post(`http://localhost:${adminPort}/app/a/stop`, (error, response) => {
-						assert.equal(response.statusCode, 204);
-						setTimeout(() => {
-							request.delete(`http://localhost:${adminPort}/app/a`, (error, response) => {
-								assert.equal(response.statusCode, 204);
-								request.get(`http://localhost:${port}/a`, (error, response) => {
-									assert.equal(response.statusCode, 404);
-									site.stop();
-									done();
+			request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "site:a" }, (error, response) => {
+				assert.equal(response.statusCode, 201);
+				setTimeout(() => {
+					request.get(`http://localhost:${port}/a`, (error, response) => {
+						assert.equal(response.body, "42");
+						request.post(`http://localhost:${adminPort}/app/a/stop`, (error, response) => {
+							assert.equal(response.statusCode, 204);
+							setTimeout(() => {
+								request.delete(`http://localhost:${adminPort}/app/a`, (error, response) => {
+									assert.equal(response.statusCode, 204);
+									request.get(`http://localhost:${port}/a`, (error, response) => {
+										assert.equal(response.statusCode, 404);
+										site.stop();
+										done();
+									});
 								});
-							});
-						}, 100);
+							}, 100);
+						});
 					});
-				});
-			}, 100);
+				}, 100);
+			});
 		});
 	});
 });
