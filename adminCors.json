@@ -1,0 +1,6 @@
+{
+	"origin": true,
+	"methods": "GET,PUT,POST,DELETE,MOVE",
+	"credentials": true,
+	"exposedHeaders": "Location"
+}
