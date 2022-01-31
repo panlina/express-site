@@ -45,6 +45,15 @@ class Site {
 			return vhost[host];
 		}
 		var app = express();
+		app.use(
+			cors(
+				fs.existsSync(path.join(config.dir, 'cors.json')) ?
+					JSON.parse(
+						fs.readFileSync(path.join(config.dir, 'cors.json'), { encoding: "utf-8" })
+					) :
+					undefined
+			)
+		);
 		app.use(function (req, res, next) {
 			var target = matchHost(req) || proxyRules.match(req);
 			if (target) {
