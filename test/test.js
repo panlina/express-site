@@ -88,7 +88,7 @@ it('app should work', function (done) {
 		assert.equal(response.statusCode, 201);
 		request.post(`http://localhost:${adminPort}/app/a/start`, (error, response) => {
 			assert.equal(response.statusCode, 204);
-			request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "site:a" }, (error, response) => {
+			request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" }, (error, response) => {
 				assert.equal(response.statusCode, 201);
 				setTimeout(() => {
 					request.get(`http://localhost:${port}/a`, (error, response) => {

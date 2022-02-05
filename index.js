@@ -57,8 +57,8 @@ class Site {
 		app.use(function (req, res, next) {
 			var target = matchHost(req) || proxyRules.match(req);
 			if (target) {
-				if (target.startsWith('site:')) {
-					var name = target.substr("site:".length);
+				if (target.startsWith('app:')) {
+					var name = target.substr("app:".length);
 					var a = app[name];
 					if (a && a._port)
 						target = `http://localhost:${a._port}`;
