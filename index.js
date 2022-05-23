@@ -1,12 +1,13 @@
 var fs = require('fs');
 var path = require('path');
 var EventEmitter = require('events');
+var http = require('http');
+var https = require('https');
 var express = require('express');
 var cors = require('cors');
 var basicAuth = require('express-basic-auth');
 var httpProxy = require('http-proxy');
 var HttpProxyRules = require('./HttpProxyRules');
-var createServer = require('create-server');
 var Module = require('./Module');
 var App = require('./App');
 var AdminApp = require('./AdminApp');
@@ -89,7 +90,7 @@ class Site {
 			else
 				next();
 		});
-		var server = createServer(app, config.ssl ? serverOptions : undefined);
+		var server = (config.ssl ? https : http).createServer(config.ssl ? serverOptions : undefined, app);
 		server.listen(config.port);
 		var eventEmitter = new EventEmitter();
 		var adminApp = new AdminApp(this, {
@@ -99,7 +100,7 @@ class Site {
 			auth: fs.existsSync(path.join(config.dir, 'adminBasicAuth.json')) ?
 				basicAuth(JSON.parse(fs.readFileSync(path.join(config.dir, 'adminBasicAuth.json'), { encoding: "utf-8" }))) : undefined
 		});
-		var adminServer = createServer(adminApp, config.adminSsl ? serverOptions : undefined);
+		var adminServer = (config.adminSsl ? https : http).createServer(config.adminSsl ? serverOptions : undefined, adminApp);
 		adminServer.listen(config.adminPort);
 		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, port: app.port }) });
 		var module = Storage(path.join(config.dir, 'module.json'));

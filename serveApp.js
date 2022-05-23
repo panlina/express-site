@@ -1,5 +1,5 @@
+var http = require('http');
 var express = require('express');
-var createServer = require('create-server');
 var commander = require('commander');
 commander
 	.option('--module <module>')
@@ -25,7 +25,7 @@ var server;
 function start(callback) {
 	var middleware = require(commander.module).apply(undefined, commander.arguments);
 	var app = express().use(middleware);
-	server = createServer(app);
+	server = http.createServer(app);
 	server.listen(commander.port || 0, callback);
 	server.once('error', callback);
 }

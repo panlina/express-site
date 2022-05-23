@@ -9,7 +9,6 @@
     "http-proxy-rules": "^1.1.3",
     "cors": "^2.8.5",
     "express-basic-auth": "^1.1.6",
-    "create-server": "panlina/create-server",
     "global-npm": "^0.3.0",
     "commander": "^2.19.0"
   },
