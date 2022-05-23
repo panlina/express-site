@@ -1,7 +1,6 @@
-var path = require('path');
+var child_process = require('child_process');
 var express = require('express');
 var bodyParser = require('body-parser');
-var npm = require('global-npm');
 var jsonBodyParser = bodyParser.json({ strict: false });
 function AdminApp(site, { cors, auth }) {
 	var app = express();
@@ -241,25 +240,19 @@ function AdminApp(site, { cors, auth }) {
 			res.json(m);
 		})
 		.post("/module/", jsonBodyParser, (req, res, next) => {
-			npm.load({ prefix: path.join(site.config.dir, "site_modules") }, function (er) {
-				if (er) {
-					res.status(500).send(er);
-					return;
-				}
-				var source = req.body.source;
-				if (source[0] == '.')
-					source = path.join(site.config.dir, source);
-				npm.commands.install([source], function (er, data) {
-					if (er) {
-						res.status(500).send(er);
-						return;
-					}
-					var [, dir] = data[data.length - 1];
-					var name = path.basename(dir);
-					site.module[name] = req.body;
-					res.status(201).header('Location', `/module/${encodeURIComponent(name)}`).end();
-				});
-			});
+			try {
+				var stdout = child_process.execSync(
+					`npm i --prefix ./site_modules ${req.body.source} --json`,
+					{ cwd: site.config.dir, encoding: 'utf8' }
+				);
+			} catch (e) {
+				res.status(500).send(e.stdout);
+				return;
+			}
+			var result = JSON.parse(stdout);
+			var name = result.added[result.added.length - 1].name;
+			site.module[name] = req.body;
+			res.status(201).header('Location', `/module/${encodeURIComponent(name)}`).end();
 		})
 		.delete("/module/:name", jsonBodyParser, (req, res, next) => {
 			var m = site.module[req.params.name];
@@ -267,20 +260,17 @@ function AdminApp(site, { cors, auth }) {
 				res.sendStatus(404);
 				return;
 			}
-			npm.load({ prefix: path.join(site.config.dir, "site_modules") }, function (er) {
-				if (er) {
-					res.status(500).send(er);
-					return;
-				}
-				npm.commands.uninstall([req.params.name], function (er) {
-					if (er) {
-						res.status(500).send(er);
-						return;
-					}
-					delete site.module[req.params.name];
-					res.status(204).end();
-				});
-			});
+			try {
+				child_process.execSync(
+					`npm rm --prefix ./site_modules ${req.params.name} --json`,
+					{ cwd: site.config.dir, encoding: 'utf8' }
+				);
+			} catch (e) {
+				res.status(500).send(e.stdout);
+				return;
+			}
+			delete site.module[req.params.name];
+			res.status(204).end();
 		})
 	function serialize(app) {
 		return {
