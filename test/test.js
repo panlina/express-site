@@ -4,7 +4,6 @@ var request = require('request');
 var ncp = require('ncp');
 var rimraf = require('rimraf');
 var Site = require('..');
-var Module = require('../Module');
 beforeEach(done => { ncp('test/site', 'test/site0', done); });
 afterEach(done => { rimraf('test/site0', done); });
 it('should start and stop', function (done) {
