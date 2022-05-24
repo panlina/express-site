@@ -241,7 +241,7 @@ function AdminApp(site, { cors, auth }) {
 		})
 		.post("/module/", jsonBodyParser, (req, res, next) => {
 			try {
-				var stdout = child_process.execSync(
+				child_process.execSync(
 					`npm i --prefix ./site_modules ${req.body.source} --json`,
 					{ cwd: site.config.dir, encoding: 'utf8' }
 				);
@@ -249,8 +249,13 @@ function AdminApp(site, { cors, auth }) {
 				res.status(500).send(e.stdout);
 				return;
 			}
-			var result = JSON.parse(stdout);
-			var name = result.added[result.added.length - 1].name;
+			var dependencies = JSON.parse(
+				child_process.execSync(
+					`npm ls --prefix ./site_modules --depth=0 --json`,
+					{ cwd: site.config.dir, encoding: 'utf8' }
+				)
+			).dependencies;
+			var name = Object.keys(dependencies)[0];
 			site.module[name] = req.body;
 			res.status(201).header('Location', `/module/${encodeURIComponent(name)}`).end();
 		})
