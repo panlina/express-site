@@ -6,7 +6,7 @@ var rimraf = require('rimraf');
 var Site = require('..');
 beforeEach(done => { ncp('test/site', 'test/site0', done); });
 afterEach(done => { rimraf('test/site0', done); });
-it('should start and stop', function (done) {
+it('start and stop', function (done) {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
@@ -26,7 +26,7 @@ it('should start and stop', function (done) {
 		});
 	});
 });
-it('proxy should work', function (done) {
+it('proxy', function (done) {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
@@ -49,7 +49,7 @@ it('proxy should work', function (done) {
 		});
 	});
 });
-it('vhost should work', function (done) {
+it('vhost', function (done) {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
@@ -72,7 +72,7 @@ it('vhost should work', function (done) {
 		});
 	});
 });
-it('app should work', function (done) {
+it('app', function (done) {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
@@ -111,7 +111,7 @@ it('app should work', function (done) {
 		});
 	});
 });
-it('module should work', function (done) {
+it('module', function (done) {
 	this.timeout(10000);
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
