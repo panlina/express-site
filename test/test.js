@@ -1,78 +1,60 @@
 var assert = require('assert');
 var http = require("http");
-var request = require('request');
+var assertThrows = require('assert-throws-async');
+var request = require('request-promise').defaults({ resolveWithFullResponse: true, simple: false });
 var ncp = require('ncp');
 var rimraf = require('rimraf');
 var Site = require('..');
 beforeEach(done => { ncp('test/site', 'test/site0', done); });
 afterEach(done => { rimraf('test/site0', done); });
-it('start and stop', function (done) {
+it('start and stop', async function () {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
-	request.get(`http://localhost:${port}`, (error, response) => {
-		assert(response);
-		request.get(`http://localhost:${adminPort}`, (error, response) => {
-			assert(response);
-			site.stop();
-			request.get(`http://localhost:${port}`, (error, response) => {
-				assert(error);
-				request.get(`http://localhost:${adminPort}`, (error, response) => {
-					assert(error);
-					done();
-				});
-			});
-		});
-	});
+	await request.get(`http://localhost:${port}`);
+	await request.get(`http://localhost:${adminPort}`);
+	site.stop();
+	assertThrows(() => request.get(`http://localhost:${port}`));
+	assertThrows(() => request.get(`http://localhost:${adminPort}`));
 });
-it('proxy', function (done) {
+it('proxy', async function () {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
 	var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); })
 	targetServer.listen(8008);
-	request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "http://localhost:8008" }, (error, response) => {
-		assert.equal(response.statusCode, 201);
-		request.get(`http://localhost:${port}/a`, (error, response) => {
-			assert.equal(response.body, "42");
-			request.delete(`http://localhost:${adminPort}/proxy-rule/%2fa`, (error, response) => {
-				assert.equal(response.statusCode, 204);
-				request.get(`http://localhost:${port}/a`, (error, response) => {
-					assert.equal(response.statusCode, 404);
-					targetServer.close();
-					site.stop();
-					done();
-				});
-			});
-		});
-	});
+	var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "http://localhost:8008" });
+	assert.equal(response.statusCode, 201);
+	var response = await request.get(`http://localhost:${port}/a`);
+	assert.equal(response.body, "42");
+	var response = await request.delete(`http://localhost:${adminPort}/proxy-rule/%2fa`);
+	assert.equal(response.statusCode, 204);
+	var response = await request.get(`http://localhost:${port}/a`);
+	assert.equal(response.statusCode, 404);
+	targetServer.close();
+	site.stop();
 });
-it('vhost', function (done) {
+it('vhost', async function () {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
 	var adminPort = site.adminServer.address().port;
 	var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); })
 	targetServer.listen(8008);
-	request.put(`http://localhost:${adminPort}/vhost/a.localhost`, { json: true, body: "http://localhost:8008" }, (error, response) => {
-		assert.equal(response.statusCode, 201);
-		request.get(`http://127.0.0.1:${port}`, { headers: { "Host": `a.localhost:${port}` } }, (error, response) => {
-			assert.equal(response.body, "42");
-			request.delete(`http://localhost:${adminPort}/vhost/a.localhost`, (error, response) => {
-				assert.equal(response.statusCode, 204);
-				request.get(`http://127.0.0.1:${port}`, { headers: { "Host": `a.localhost:${port}` } }, (error, response) => {
-					assert.equal(response.statusCode, 404);
-					targetServer.close();
-					site.stop();
-					done();
-				});
-			});
-		});
-	});
+	var response = await request.put(`http://localhost:${adminPort}/vhost/a.localhost`, { json: true, body: "http://localhost:8008" });
+	assert.equal(response.statusCode, 201);
+	var response = await request.get(`http://127.0.0.1:${port}`, { headers: { "Host": `a.localhost:${port}` } });
+	assert.equal(response.body, "42");
+	var response = await request.delete(`http://localhost:${adminPort}/vhost/a.localhost`);
+	assert.equal(response.statusCode, 204);
+	var response = await request.get(`http://127.0.0.1:${port}`, { headers: { "Host": `a.localhost:${port}` } });
+	assert.equal(response.statusCode, 404);
+	targetServer.close();
+	site.stop();
 });
-it('app', function (done) {
+it('app', async function () {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var port = site.server.address().port;
@@ -83,51 +65,41 @@ it('app', function (done) {
 		"arguments": [],
 		"port": 8008
 	};
-	request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app }, (error, response) => {
-		assert.equal(response.statusCode, 201);
-		request.post(`http://localhost:${adminPort}/app/a/start`, (error, response) => {
-			assert.equal(response.statusCode, 204);
-			request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" }, (error, response) => {
-				assert.equal(response.statusCode, 201);
-				setTimeout(() => {
-					request.get(`http://localhost:${port}/a`, (error, response) => {
-						assert.equal(response.body, "42");
-						request.post(`http://localhost:${adminPort}/app/a/stop`, (error, response) => {
-							assert.equal(response.statusCode, 204);
-							setTimeout(() => {
-								request.delete(`http://localhost:${adminPort}/app/a`, (error, response) => {
-									assert.equal(response.statusCode, 204);
-									request.get(`http://localhost:${port}/a`, (error, response) => {
-										assert.equal(response.statusCode, 404);
-										site.stop();
-										done();
-									});
-								});
-							}, 100);
-						});
-					});
-				}, 100);
-			});
-		});
-	});
+	var response = await request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app });
+	assert.equal(response.statusCode, 201);
+	var response = await request.post(`http://localhost:${adminPort}/app/a/start`);
+	assert.equal(response.statusCode, 204);
+	var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" });
+	assert.equal(response.statusCode, 201);
+	await wait(100);
+	var response = await request.get(`http://localhost:${port}/a`);
+	assert.equal(response.body, "42");
+	var response = await request.post(`http://localhost:${adminPort}/app/a/stop`);
+	assert.equal(response.statusCode, 204);
+	await wait(100);
+	var response = await request.delete(`http://localhost:${adminPort}/app/a`);
+	assert.equal(response.statusCode, 204);
+	var response = await request.get(`http://localhost:${port}/a`);
+	assert.equal(response.statusCode, 404);
+	site.stop();
 });
-it('module', function (done) {
+it('module', async function () {
 	this.timeout(10000);
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
 	var adminPort = site.adminServer.address().port;
-	request.post(`http://localhost:${adminPort}/module/`, { json: true, body: { source: "./a" } }, (error, response) => {
-		assert.equal(response.statusCode, 201);
-		request.get(`http://localhost:${adminPort}/module/a`, { json: true }, (error, response) => {
-			assert.deepEqual(response.body, { source: "./a" });
-			request.delete(`http://localhost:${adminPort}/module/a`, (error, response) => {
-				assert.equal(response.statusCode, 204);
-				request.get(`http://localhost:${adminPort}/module/a`, (error, response) => {
-					assert.equal(response.statusCode, 404);
-					site.stop();
-					done();
-				});
-			});
-		});
-	});
+	var response = await request.post(`http://localhost:${adminPort}/module/`, { json: true, body: { source: "./a" } });
+	assert.equal(response.statusCode, 201);
+	var response = await request.get(`http://localhost:${adminPort}/module/a`, { json: true });
+	assert.deepEqual(response.body, { source: "./a" });
+	var response = await request.delete(`http://localhost:${adminPort}/module/a`);
+	assert.equal(response.statusCode, 204);
+	var response = await request.get(`http://localhost:${adminPort}/module/a`);
+	assert.equal(response.statusCode, 404);
+	site.stop();
 });
+function wait(ms) {
+	return new Promise((resolve, reject) => {
+		setTimeout(resolve, ms);
+	});
+}

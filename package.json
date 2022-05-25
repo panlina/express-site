@@ -12,9 +12,11 @@
     "commander": "^2.19.0"
   },
   "devDependencies": {
+    "assert-throws-async": "^3.0.0",
     "mocha": "^5.2.0",
     "ncp": "^2.0.0",
     "request": "^2.88.0",
+    "request-promise": "^4.2.6",
     "rimraf": "^3.0.2"
   },
   "scripts": {
