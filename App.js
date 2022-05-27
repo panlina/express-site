@@ -50,6 +50,31 @@ class App {
 				});
 				callback.apply();
 				break;
+			case 'npm-start':
+				var $this = this;
+				try {
+					// https://stackoverflow.com/a/44315152/4127811
+					var module = path.dirname(this.site.Module.resolve(joinPathUnnormalized(this.module, 'package.json')));
+				}
+				catch (e) { callback(e); return; }
+				this.process = child_process.spawn("npm", ["start",
+					...this.arguments.length ?
+						["--", ...this.arguments] :
+						[]
+				], { cwd: module });
+				this._port = this.port;
+				this.process.on('exit', function () {
+					delete $this._port;
+					delete $this.process;
+				});
+				callback.apply();
+				function joinPathUnnormalized() {
+					var p = path.join.apply(path, arguments);
+					if (arguments[0].startsWith('./'))
+						p = './' + p;
+					return p;
+				}
+				break;
 		}
 	}
 	stop(callback) {
@@ -63,6 +88,10 @@ class App {
 				});
 				break;
 			case 'standalone':
+				this.process.kill();
+				callback.call();
+				break;
+			case 'npm-start':
 				this.process.kill();
 				callback.call();
 				break;
