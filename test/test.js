@@ -2,6 +2,7 @@ var assert = require('assert');
 var http = require("http");
 var assertThrows = require('assert-throws-async');
 var request = require('request-promise').defaults({ resolveWithFullResponse: true, simple: false });
+var { waitFor } = require('poll-until-promise');
 var ncp = require('ncp');
 var rimraf = require('rimraf');
 var Site = require('..');
@@ -78,12 +79,20 @@ it('app', async function () {
 		assert.equal(response.statusCode, 204);
 		var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" });
 		assert.equal(response.statusCode, 201);
-		await wait(100);
+		await waitFor(
+			() => request.get(`http://localhost:${port}/a`)
+				.then(response => response.statusCode == 200),
+			{ interval: 100 }
+		);
 		var response = await request.get(`http://localhost:${port}/a`);
 		assert.equal(response.body, "42");
 		var response = await request.post(`http://localhost:${adminPort}/app/a/stop`);
 		assert.equal(response.statusCode, 204);
-		await wait(100);
+		await waitFor(
+			() => request.get(`http://localhost:${adminPort}/app/a`, { json: true })
+				.then(response => !response.body.running),
+			{ interval: 100 }
+		);
 		var response = await request.delete(`http://localhost:${adminPort}/app/a`);
 		assert.equal(response.statusCode, 204);
 		var response = await request.get(`http://localhost:${port}/a`);
@@ -110,8 +119,3 @@ it('module', async function () {
 		site.stop();
 	}
 });
-function wait(ms) {
-	return new Promise((resolve, reject) => {
-		setTimeout(resolve, ms);
-	});
-}
