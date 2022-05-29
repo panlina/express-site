@@ -61,18 +61,36 @@ it('vhost', async function () {
 		site.stop();
 	}
 });
-it('app', async function () {
+it('app.middleware', async function () {
+	await testApp({
+		"type": "middleware",
+		"module": "./middleware.js",
+		"arguments": [],
+		"port": 8008
+	});
+});
+it('app.standalone', async function () {
+	await testApp({
+		"type": "standalone",
+		"module": "./standalone.js",
+		"arguments": [],
+		"port": 8008
+	});
+});
+it('app.npm-start', async function () {
+	await testApp({
+		"type": "npm-start",
+		"module": "./npm-start",
+		"arguments": [],
+		"port": 8008
+	});
+});
+async function testApp(app) {
 	try {
 		var site = new Site({ dir: "test/site0/" });
 		site.start();
 		var port = site.server.address().port;
 		var adminPort = site.adminServer.address().port;
-		var app = {
-			"type": "standalone",
-			"module": "./standalone.js",
-			"arguments": [],
-			"port": 8008
-		};
 		var response = await request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app });
 		assert.equal(response.statusCode, 201);
 		var response = await request.post(`http://localhost:${adminPort}/app/a/start`);
@@ -100,7 +118,7 @@ it('app', async function () {
 	} finally {
 		site.stop();
 	}
-});
+}
 it('module', async function () {
 	try {
 		this.timeout(10000);
