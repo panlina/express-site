@@ -74,6 +74,7 @@ it('app.standalone', async function () {
 		"type": "standalone",
 		"module": "./standalone.js",
 		"arguments": [],
+		"env": { PORT: 8008 },
 		"port": 8008
 	});
 });
@@ -82,6 +83,7 @@ it('app.npm-start', async function () {
 		"type": "npm-start",
 		"module": "./npm-start",
 		"arguments": [],
+		"env": { PORT: 8008 },
 		"port": 8008
 	});
 });

@@ -282,6 +282,7 @@ function AdminApp(site, { cors, auth }) {
 			type: app.type,
 			module: app.module,
 			arguments: app.arguments,
+			env: app.env,
 			port: app.port,
 			running: app.running
 		};

@@ -3,4 +3,4 @@ var server = http.createServer((req, res) => {
 	res.write("42");
 	res.end();
 });
-server.listen(8008);
+server.listen(+process.env.PORT);

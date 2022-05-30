@@ -7,6 +7,7 @@ class App {
 		this.type = argument.type;
 		this.module = argument.module;
 		this.arguments = argument.arguments;
+		this.env = argument.env;
 		this.port = argument.port;
 		this.process;
 		this._port;
@@ -42,7 +43,7 @@ class App {
 				var $this = this;
 				try { var module = this.site.Module.resolve(this.module); }
 				catch (e) { callback(e); return; }
-				this.process = child_process.fork(module, this.arguments);
+				this.process = child_process.fork(module, this.arguments, { env: { ...process.env, ...this.env } });
 				this._port = this.port;
 				this.process.on('exit', function () {
 					delete $this._port;
@@ -61,7 +62,7 @@ class App {
 					...this.arguments.length ?
 						["--", ...this.arguments] :
 						[]
-				], { cwd: module });
+				], { cwd: module, env: { ...process.env, ...this.env } });
 				this._port = this.port;
 				this.process.on('exit', function () {
 					delete $this._port;
