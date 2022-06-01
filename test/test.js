@@ -65,7 +65,7 @@ it('app.middleware', async function () {
 	await testApp({
 		"type": "middleware",
 		"module": "./middleware.js",
-		"arguments": [],
+		"arguments": ["--a", "abc"],
 		"port": 8008
 	});
 });
@@ -73,7 +73,7 @@ it('app.standalone', async function () {
 	await testApp({
 		"type": "standalone",
 		"module": "./standalone.js",
-		"arguments": [],
+		"arguments": ["--a", "abc"],
 		"env": { PORT: 8008 },
 		"port": 8008
 	});
@@ -82,7 +82,7 @@ it('app.npm-start', async function () {
 	await testApp({
 		"type": "npm-start",
 		"module": "./npm-start",
-		"arguments": [],
+		"arguments": ["--a", "abc"],
 		"env": { PORT: 8008 },
 		"port": 8008
 	});
@@ -106,6 +106,8 @@ async function testApp(app) {
 		);
 		var response = await request.get(`http://localhost:${port}/a`);
 		assert.equal(response.body, "42");
+		var response = await request.get(`http://localhost:${port}/a/arguments`);
+		assert.equal(response.body, app.arguments.join(' '));
 		var response = await request.post(`http://localhost:${adminPort}/app/a/stop`);
 		assert.equal(response.statusCode, 204);
 		await waitFor(
