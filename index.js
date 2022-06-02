@@ -122,7 +122,8 @@ class Site {
 	}
 	stop() {
 		for (var name in this.app)
-			this.app[name].stop(() => { });
+			if (this.app[name].running)
+				this.app[name].stop(() => { });
 		this.server.close();
 		this.adminServer.close();
 	}
