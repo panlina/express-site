@@ -141,3 +141,34 @@ it('module', async function () {
 		site.stop();
 	}
 });
+it('persistence', async function () {
+	var site = new Site({ dir: "test/site0/" });
+	site.start();
+	var adminPort = site.adminServer.address().port;
+	var app = {
+		"type": "standalone",
+		"module": "./standalone.js",
+		"arguments": ["--a", "abc"],
+		"env": { PORT: 8008 },
+		"port": 8008
+	};
+	await request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app });
+	await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" });
+	site.stop();
+	await wait(100);
+	site.start();
+	var port = site.server.address().port;
+	await waitFor(
+		() => request.get(`http://localhost:${port}/a`)
+			.then(response => response.statusCode == 200),
+		{ interval: 100 }
+	);
+	var response = await request.get(`http://localhost:${port}/a`);
+	assert.equal(response.body, "42");
+	site.stop();
+});
+function wait(ms) {
+	return new Promise((resolve, reject) => {
+		setTimeout(resolve, ms);
+	});
+}
