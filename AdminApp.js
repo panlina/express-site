@@ -201,16 +201,15 @@ function AdminApp(site, { cors, auth }) {
 				res.status(409).send("The app is already running.");
 				return;
 			}
-			a.start(e => {
-				if (e instanceof Error) {
-					res.status(500).send(e.message).end();
-					return;
-				}
+			a.start().then(() => {
 				site.eventEmitter.emit('start', `/app/${encodeURIComponent(req.params.name || 'default')}`);
 				a.process.on('exit', (code, signal) => {
 					site.eventEmitter.emit('stop', `/app/${encodeURIComponent(req.params.name || 'default')}`, { code, signal });
 				});
 				res.status(204).end();
+			}, e => {
+				res.status(500).send(e.message).end();
+				return;
 			});
 		})
 		.post("/app/:name/stop", (req, res, next) => {
@@ -224,7 +223,7 @@ function AdminApp(site, { cors, auth }) {
 				res.status(409).send("The app is not running.");
 				return;
 			}
-			a.stop(() => {
+			a.stop().then(() => {
 				res.status(204).end();
 			});
 		})

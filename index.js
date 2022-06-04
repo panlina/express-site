@@ -105,8 +105,7 @@ class Site {
 		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, env: app.env, port: app.port }) });
 		var module = Storage(path.join(config.dir, 'module.json'));
 		for (let name in app)
-			app[name].start(e => {
-				if (e instanceof Error) return;
+			app[name].start().then(() => {
 				eventEmitter.emit('start', `/app/${encodeURIComponent(name || 'default')}`);
 				app[name].process.on('exit', function (code, signal) {
 					eventEmitter.emit('stop', `/app/${encodeURIComponent(name || 'default')}`, { code, signal });
@@ -123,7 +122,7 @@ class Site {
 	stop() {
 		for (var name in this.app)
 			if (this.app[name].running)
-				this.app[name].stop(() => { });
+				this.app[name].stop();
 		this.server.close();
 		this.adminServer.close();
 	}

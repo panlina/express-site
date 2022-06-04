@@ -12,91 +12,95 @@ class App {
 		this.process;
 		this._port;
 	}
-	start(callback) {
-		switch (this.type) {
-			case 'middleware':
-				var $this = this;
-				try { var module = this.site.Module.resolve(this.module); }
-				catch (e) { callback(e); return; }
-				this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", module, "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
-				this.process.send('start');
-				this.process.once('message', function (message) {
-					var [status, data] = message.split('\n');
-					switch (status) {
-						case 'succeed':
-							$this._port = +data;
-							$this.process.on('exit', function () {
-								delete $this._port;
+	start() {
+		return new Promise((resolve, reject) => {
+			switch (this.type) {
+				case 'middleware':
+					var $this = this;
+					try { var module = this.site.Module.resolve(this.module); }
+					catch (e) { reject(e); return; }
+					this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", module, "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
+					this.process.send('start');
+					this.process.once('message', function (message) {
+						var [status, data] = message.split('\n');
+						switch (status) {
+							case 'succeed':
+								$this._port = +data;
+								$this.process.on('exit', function () {
+									delete $this._port;
+									delete $this.process;
+								});
+								resolve();
+								break;
+							case 'error':
+								$this.process.kill();
 								delete $this.process;
-							});
-							callback.apply();
-							break;
-						case 'error':
-							$this.process.kill();
-							delete $this.process;
-							callback(new Error(data));
-							break;
+								reject(new Error(data));
+								break;
+						}
+					});
+					break;
+				case 'standalone':
+					var $this = this;
+					try { var module = this.site.Module.resolve(this.module); }
+					catch (e) { reject(e); return; }
+					this.process = child_process.fork(module, this.arguments, { env: { ...process.env, ...this.env } });
+					this._port = this.port;
+					this.process.on('exit', function () {
+						delete $this._port;
+						delete $this.process;
+					});
+					resolve();
+					break;
+				case 'npm-start':
+					var $this = this;
+					try {
+						// https://stackoverflow.com/a/44315152/4127811
+						var module = path.dirname(this.site.Module.resolve(joinPathUnnormalized(this.module, 'package.json')));
 					}
-				});
-				break;
-			case 'standalone':
-				var $this = this;
-				try { var module = this.site.Module.resolve(this.module); }
-				catch (e) { callback(e); return; }
-				this.process = child_process.fork(module, this.arguments, { env: { ...process.env, ...this.env } });
-				this._port = this.port;
-				this.process.on('exit', function () {
-					delete $this._port;
-					delete $this.process;
-				});
-				callback.apply();
-				break;
-			case 'npm-start':
-				var $this = this;
-				try {
-					// https://stackoverflow.com/a/44315152/4127811
-					var module = path.dirname(this.site.Module.resolve(joinPathUnnormalized(this.module, 'package.json')));
-				}
-				catch (e) { callback(e); return; }
-				this.process = child_process.spawn("npm", ["start",
-					...this.arguments.length ?
-						["--", ...this.arguments] :
-						[]
-				], { cwd: module, env: { ...process.env, ...this.env } });
-				this._port = this.port;
-				this.process.on('exit', function () {
-					delete $this._port;
-					delete $this.process;
-				});
-				callback.apply();
-				function joinPathUnnormalized() {
-					var p = path.join.apply(path, arguments);
-					if (arguments[0].startsWith('./'))
-						p = './' + p;
-					return p;
-				}
-				break;
-		}
+					catch (e) { reject(e); return; }
+					this.process = child_process.spawn("npm", ["start",
+						...this.arguments.length ?
+							["--", ...this.arguments] :
+							[]
+					], { cwd: module, env: { ...process.env, ...this.env } });
+					this._port = this.port;
+					this.process.on('exit', function () {
+						delete $this._port;
+						delete $this.process;
+					});
+					resolve();
+					function joinPathUnnormalized() {
+						var p = path.join.apply(path, arguments);
+						if (arguments[0].startsWith('./'))
+							p = './' + p;
+						return p;
+					}
+					break;
+			}
+		});
 	}
-	stop(callback) {
-		switch (this.type) {
-			case 'middleware':
-				var $this = this;
-				this.process.send('stop');
-				this.process.once('message', function () {
-					$this.process.kill();
-					callback.call();
-				});
-				break;
-			case 'standalone':
-				this.process.kill();
-				callback.call();
-				break;
-			case 'npm-start':
-				this.process.kill();
-				callback.call();
-				break;
-		}
+	stop() {
+		return new Promise((resolve, reject) => {
+			switch (this.type) {
+				case 'middleware':
+					var $this = this;
+					this.process.send('stop');
+					this.process.once('message', function () {
+						$this.process.kill();
+						resolve();
+					});
+					break;
+				case 'standalone':
+					this.process.kill();
+					resolve();
+					break;
+				case 'npm-start':
+					this.process.kill();
+					resolve();
+					break;
+			}
+		});
 	}
 	get running() {
 		return this.process != undefined;
