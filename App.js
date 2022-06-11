@@ -7,6 +7,7 @@ class App {
 		this.type = argument.type;
 		this.module = argument.module;
 		this.arguments = argument.arguments;
+		this.cwd = argument.cwd;
 		this.env = argument.env;
 		this.port = argument.port;
 		this.process;
@@ -43,7 +44,10 @@ class App {
 				var $this = this;
 				try { var module = this.site.Module.resolve(this.module); }
 				catch (e) { callback(e); return; }
-				this.process = child_process.fork(module, this.arguments, { env: { ...process.env, ...this.env } });
+				this.process = child_process.fork(module, this.arguments, {
+					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
+					env: { ...process.env, ...this.env }
+				});
 				this._port = this.port;
 				this.process.on('exit', function () {
 					delete $this._port;

@@ -1,4 +1,5 @@
 var assert = require('assert');
+var path = require("path");
 var http = require("http");
 var assertThrows = require('assert-throws-async');
 var request = require('request-promise').defaults({ resolveWithFullResponse: true, simple: false });
@@ -74,6 +75,7 @@ it('app.standalone', async function () {
 		"type": "standalone",
 		"module": "./standalone.js",
 		"arguments": ["--a", "abc"],
+		"cwd": ".",
 		"env": { PORT: 8008 },
 		"port": 8008
 	});
@@ -108,6 +110,10 @@ async function testApp(app) {
 		assert.equal(response.body, "42");
 		var response = await request.get(`http://localhost:${port}/a/arguments`);
 		assert.equal(response.body, app.arguments.join(' '));
+		if (app.cwd) {
+			var response = await request.get(`http://localhost:${port}/a/cwd`);
+			assert.equal(response.body, path.resolve("test/site0/", app.cwd));
+		}
 		var response = await request.post(`http://localhost:${adminPort}/app/a/stop`);
 		assert.equal(response.statusCode, 204);
 		await waitFor(
