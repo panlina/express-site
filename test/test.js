@@ -80,11 +80,12 @@ it('app.standalone', async function () {
 		"port": 8008
 	});
 });
-it('app.npm-start', async function () {
+it('app.command', async function () {
 	await testApp({
-		"type": "npm-start",
-		"module": "./npm-start",
-		"arguments": ["--a", "abc"],
+		"type": "command",
+		"module": "npm",
+		"arguments": ["start", "--", "--a", "abc"],
+		"cwd": "./npm-start",
 		"env": { PORT: 8008 },
 		"port": 8008
 	});
@@ -109,7 +110,7 @@ async function testApp(app) {
 		var response = await request.get(`http://localhost:${port}/a`);
 		assert.equal(response.body, "42");
 		var response = await request.get(`http://localhost:${port}/a/arguments`);
-		assert.equal(response.body, app.arguments.join(' '));
+		assert.equal(response.body, ["--a", "abc"].join(' '));
 		if (app.cwd) {
 			var response = await request.get(`http://localhost:${port}/a/cwd`);
 			assert.equal(response.body, path.resolve("test/site0/", app.cwd));

@@ -55,30 +55,18 @@ class App {
 				});
 				callback.apply();
 				break;
-			case 'npm-start':
+			case 'command':
 				var $this = this;
-				try {
-					// https://stackoverflow.com/a/44315152/4127811
-					var module = path.dirname(this.site.Module.resolve(joinPathUnnormalized(this.module, 'package.json')));
-				}
-				catch (e) { callback(e); return; }
-				this.process = child_process.spawn("npm", ["start",
-					...this.arguments.length ?
-						["--", ...this.arguments] :
-						[]
-				], { cwd: module, env: { ...process.env, ...this.env } });
+				this.process = child_process.spawn(this.module, this.arguments, {
+					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
+					env: { ...process.env, ...this.env }
+				});
 				this._port = this.port;
 				this.process.on('exit', function () {
 					delete $this._port;
 					delete $this.process;
 				});
 				callback.apply();
-				function joinPathUnnormalized() {
-					var p = path.join.apply(path, arguments);
-					if (arguments[0].startsWith('./'))
-						p = './' + p;
-					return p;
-				}
 				break;
 		}
 	}
@@ -96,7 +84,7 @@ class App {
 				this.process.kill();
 				callback.call();
 				break;
-			case 'npm-start':
+			case 'command':
 				this.process.kill();
 				callback.call();
 				break;

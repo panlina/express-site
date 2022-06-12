@@ -5,6 +5,11 @@ var server = http.createServer((req, res) => {
 		res.end();
 		return;
 	}
+	if (req.url == '/cwd') {
+		res.write(process.cwd());
+		res.end();
+		return;
+	}
 	res.write("42");
 	res.end();
 });
