@@ -94,7 +94,7 @@ class Site {
 		server.listen(config.port);
 		var eventEmitter = new EventEmitter();
 		var adminApp = new AdminApp(this, {
-			cors: this.config.cors ?
+			cors: this.config.adminCors ?
 				cors(require('./adminCors.json')) :
 				undefined,
 			auth: fs.existsSync(path.join(config.dir, 'adminBasicAuth.json')) ?

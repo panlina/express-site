@@ -10,7 +10,8 @@ commander
 	.option('--cert <cert>')
 	.option('--key <key>')
 	.option('--admin-port <admin-port>', undefined, Number, 9000)
-	.option('--admin-ssl');
+	.option('--admin-ssl')
+	.option('--admin-cors');
 commander.parse(process.argv);
 var config = {
 	dir: global.dir,
@@ -19,6 +20,7 @@ var config = {
 	cert: commander.cert,
 	key: commander.key,
 	adminPort: commander.adminPort,
-	adminSsl: commander.adminSsl
+	adminSsl: commander.adminSsl,
+	adminCors: commander.adminCors
 };
 new Site(config).start();
