@@ -9,6 +9,7 @@ class App {
 		this.arguments = argument.arguments;
 		this.cwd = argument.cwd;
 		this.env = argument.env;
+		this.shell = argument.shell;
 		this.port = argument.port;
 		this.process;
 		this._port;
@@ -46,7 +47,8 @@ class App {
 				catch (e) { callback(e); return; }
 				this.process = child_process.fork(module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env }
+					env: { ...process.env, ...this.env },
+					shell: this.shell
 				});
 				this._port = this.port;
 				this.process.on('exit', function () {
@@ -59,7 +61,8 @@ class App {
 				var $this = this;
 				this.process = child_process.spawn(this.module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env }
+					env: { ...process.env, ...this.env },
+					shell: this.shell
 				});
 				this._port = this.port;
 				this.process.on('exit', function () {

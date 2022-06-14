@@ -284,6 +284,7 @@ function AdminApp(site, { cors, auth }) {
 			arguments: app.arguments,
 			cwd: app.cwd,
 			env: app.env,
+			shell: app.shell,
 			port: app.port,
 			running: app.running
 		};
