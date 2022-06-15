@@ -47,7 +47,7 @@ class App {
 				catch (e) { callback(e); return; }
 				this.process = child_process.fork(module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env },
+					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
 					shell: this.shell
 				});
 				this._port = this.port;
@@ -61,7 +61,7 @@ class App {
 				var $this = this;
 				this.process = child_process.spawn(this.module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env },
+					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
 					shell: this.shell
 				});
 				this._port = this.port;
