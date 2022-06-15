@@ -90,6 +90,15 @@ it('app.command', async function () {
 		"port": 8008
 	});
 });
+it('app.EXPRESS_SITE_PORT', async function () {
+	await testApp({
+		"type": "command",
+		"module": "PORT=$EXPRESS_SITE_PORT npm start -- --a abc",
+		"cwd": "./npm-start",
+		"shell": true,
+		"port": 8008
+	});
+});
 async function testApp(app) {
 	try {
 		var site = new Site({ dir: "test/site0/" });
