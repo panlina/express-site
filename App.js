@@ -47,8 +47,7 @@ class App {
 				catch (e) { callback(e); return; }
 				this.process = child_process.fork(module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
-					shell: this.shell
+					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port }
 				});
 				this._port = this.port;
 				this.process.on('exit', function () {
