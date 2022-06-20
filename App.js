@@ -20,7 +20,13 @@ class App {
 				var $this = this;
 				try { var module = this.site.Module.resolve(this.module); }
 				catch (e) { callback(e); return; }
-				this.process = child_process.fork(path.join(__dirname, 'serveApp.js'), ["--module", module, "--arguments", JSON.stringify(this.arguments), ...this.port ? ["--port", this.port] : []]);
+				this.process = child_process.fork(
+					path.join(__dirname, 'serveApp.js'), [
+						"--module", module,
+						"--arguments", JSON.stringify(this.arguments),
+						...this.port ? ["--port", this.port] : []
+					]
+				);
 				this.process.send('start');
 				this.process.once('message', function (message) {
 					var [status, data] = message.split('\n');
