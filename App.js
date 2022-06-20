@@ -55,12 +55,18 @@ class App {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
 					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port }
 				});
-				this._port = this.port;
-				this.process.on('exit', function () {
-					delete $this._port;
-					delete $this.process;
+				this.process.on('spawn', function () {
+					$this._port = $this.port;
+					$this.process.on('exit', function () {
+						delete $this._port;
+						delete $this.process;
+					});
+					callback.apply();
 				});
-				callback.apply();
+				this.process.on('error', function (e) {
+					delete $this.process;
+					callback(e);
+				});
 				break;
 			case 'command':
 				var $this = this;
@@ -69,12 +75,18 @@ class App {
 					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
 					shell: this.shell
 				});
-				this._port = this.port;
-				this.process.on('exit', function () {
-					delete $this._port;
-					delete $this.process;
+				this.process.on('spawn', function () {
+					$this._port = $this.port;
+					$this.process.on('exit', function () {
+						delete $this._port;
+						delete $this.process;
+					});
+					callback.apply();
 				});
-				callback.apply();
+				this.process.on('error', function (e) {
+					delete $this.process;
+					callback(e);
+				});
 				break;
 		}
 	}
