@@ -25,7 +25,8 @@ class App {
 						"--module", module,
 						"--arguments", JSON.stringify(this.arguments),
 						...this.port ? ["--port", this.port] : []
-					]
+					],
+					{ silent: true }
 				);
 				this.process.send('start');
 				this.process.once('message', function (message) {
@@ -53,7 +54,8 @@ class App {
 				catch (e) { callback(e); return; }
 				this.process = child_process.fork(module, this.arguments, {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port }
+					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
+					silent: true
 				});
 				this.process.on('spawn', function () {
 					$this._port = $this.port;
