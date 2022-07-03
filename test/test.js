@@ -76,7 +76,7 @@ it('app.standalone', async function () {
 		"module": "./standalone.js",
 		"arguments": ["--a", "abc"],
 		"cwd": ".",
-		"env": { PORT: 8008 },
+		"env": { PORT: "{{port}}" },
 		"port": 8008
 	});
 });
@@ -86,16 +86,7 @@ it('app.command', async function () {
 		"module": "npm",
 		"arguments": ["start", "--", "--a", "abc"],
 		"cwd": "./npm-start",
-		"env": { PORT: 8008 },
-		"port": 8008
-	});
-});
-it('app.EXPRESS_SITE_PORT', async function () {
-	await testApp({
-		"type": "command",
-		"module": "PORT=$EXPRESS_SITE_PORT npm start -- --a abc",
-		"cwd": "./npm-start",
-		"shell": true,
+		"env": { PORT: "{{port}}" },
 		"port": 8008
 	});
 });
@@ -165,7 +156,7 @@ it('persistence', async function () {
 		"type": "standalone",
 		"module": "./standalone.js",
 		"arguments": ["--a", "abc"],
-		"env": { PORT: 8008 },
+		"env": { PORT: "{{port}}" },
 		"port": 8008
 	};
 	await request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app });

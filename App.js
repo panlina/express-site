@@ -1,5 +1,7 @@
 var path = require('path');
 var child_process = require('child_process');
+var interpolateString = require('interpolate-string');
+var mapValues = require('lodash.mapvalues');
 
 class App {
 	constructor(argument) {
@@ -52,9 +54,9 @@ class App {
 				var $this = this;
 				try { var module = this.site.Module.resolve(this.module); }
 				catch (e) { callback(e); return; }
-				this.process = child_process.fork(module, this.arguments, {
+				this.process = child_process.fork(module, this.arguments.map(interpolate), {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
+					env: { ...process.env, ...mapValues(this.env, interpolate) },
 					silent: true
 				});
 				this.process.on('spawn', function () {
@@ -72,9 +74,9 @@ class App {
 				break;
 			case 'command':
 				var $this = this;
-				this.process = child_process.spawn(this.module, this.arguments, {
+				this.process = child_process.spawn(interpolate(this.module), this.arguments.map(interpolate), {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...this.env, EXPRESS_SITE_PORT: this.port },
+					env: { ...process.env, ...mapValues(this.env, interpolate) },
 					shell: this.shell
 				});
 				this.process.on('spawn', function () {
@@ -90,6 +92,9 @@ class App {
 					callback(e);
 				});
 				break;
+		}
+		function interpolate(s) {
+			return interpolateString(s, { port: $this.port });
 		}
 	}
 	stop(callback) {
