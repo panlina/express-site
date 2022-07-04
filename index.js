@@ -102,7 +102,7 @@ class Site {
 		});
 		var adminServer = (config.adminSsl ? https : http).createServer(config.adminSsl ? serverOptions : undefined, adminApp);
 		adminServer.listen(config.adminPort);
-		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, cwd: app.cwd, env: app.env, shell: app.shell, port: app.port }) });
+		var app = Storage(path.join(config.dir, 'app.json'), { constructor: this.App, destructor: app => ({ type: app.type, module: app.module, arguments: app.arguments, cwd: app.cwd, env: app.env, port: app.port }) });
 		var module = Storage(path.join(config.dir, 'module.json'));
 		for (let name in app)
 			app[name].start(e => {

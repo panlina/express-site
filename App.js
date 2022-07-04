@@ -11,7 +11,6 @@ class App {
 		this.arguments = argument.arguments;
 		this.cwd = argument.cwd;
 		this.env = argument.env;
-		this.shell = argument.shell;
 		this.port = argument.port;
 		this.process;
 		this._port;
@@ -76,8 +75,7 @@ class App {
 				var $this = this;
 				this.process = child_process.spawn(interpolate(this.module), this.arguments.map(interpolate), {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
-					env: { ...process.env, ...mapValues(this.env, interpolate) },
-					shell: this.shell
+					env: { ...process.env, ...mapValues(this.env, interpolate) }
 				});
 				this.process.on('spawn', function () {
 					$this._port = $this.port;
