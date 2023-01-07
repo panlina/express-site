@@ -130,24 +130,6 @@ async function testApp(app) {
 		site.stop();
 	}
 }
-it('module', async function () {
-	try {
-		this.timeout(10000);
-		var site = new Site({ dir: "test/site0/" });
-		site.start();
-		var adminPort = site.adminServer.address().port;
-		var response = await request.post(`http://localhost:${adminPort}/module/`, { json: true, body: { source: "./a" } });
-		assert.equal(response.statusCode, 201);
-		var response = await request.get(`http://localhost:${adminPort}/module/a`, { json: true });
-		assert.deepEqual(response.body, { source: "./a" });
-		var response = await request.delete(`http://localhost:${adminPort}/module/a`);
-		assert.equal(response.statusCode, 204);
-		var response = await request.get(`http://localhost:${adminPort}/module/a`);
-		assert.equal(response.statusCode, 404);
-	} finally {
-		site.stop();
-	}
-});
 it('persistence', async function () {
 	var site = new Site({ dir: "test/site0/" });
 	site.start();
