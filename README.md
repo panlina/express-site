@@ -1,4 +1,4 @@
-# express-site [![Build Status](https://travis-ci.org/panlina/express-site.svg)](https://travis-ci.org/panlina/express-site)
+# express-site [![test](https://github.com/panlina/express-site/actions/workflows/test.yml/badge.svg)](https://github.com/panlina/express-site/actions/workflows/test.yml)
 A host for node/express web applications, with a RESTful admin API.
 
 Quickly turn your server into a website/gateway. Easily add/remove apps. Good for personal site.
