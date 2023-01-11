@@ -236,6 +236,7 @@ function AdminApp(site, { cors, auth }) {
 			cwd: app.cwd,
 			env: app.env,
 			port: app.port,
+			_port: app._port,
 			running: app.running
 		};
 	}

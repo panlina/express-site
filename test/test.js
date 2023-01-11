@@ -90,6 +90,34 @@ it('app.command', async function () {
 		"port": 8008
 	});
 });
+it('app.middleware.auto-port', async function () {
+	await testApp({
+		"type": "middleware",
+		"module": "./middleware.js",
+		"arguments": ["--a", "abc"],
+		"port": null
+	});
+});
+it('app.standalone.auto-port', async function () {
+	await testApp({
+		"type": "standalone",
+		"module": "./standalone.js",
+		"arguments": ["--a", "abc"],
+		"cwd": ".",
+		"env": { PORT: "{{port}}" },
+		"port": null
+	});
+});
+it('app.command.auto-port', async function () {
+	await testApp({
+		"type": "command",
+		"module": "npm",
+		"arguments": ["start", "--", "--a", "abc"],
+		"cwd": "./npm-start",
+		"env": { PORT: "{{port}}" },
+		"port": null
+	});
+});
 async function testApp(app) {
 	try {
 		var site = new Site({ dir: "test/site0/" });

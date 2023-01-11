@@ -15,7 +15,8 @@ class App {
 		this.process;
 		this._port;
 	}
-	start(callback) {
+	async start(callback) {
+		var { default: getPort } = await import('get-port');
 		switch (this.type) {
 			case 'middleware':
 				var $this = this;
@@ -53,13 +54,16 @@ class App {
 				var $this = this;
 				try { var module = this.site.Module.resolve(this.module); }
 				catch (e) { callback(e); return; }
+				var _port = $this.port || await getPort({
+					exclude: Object.values(this.site.app).map(app => app.port).filter(Boolean)
+				});
 				this.process = child_process.fork(module, this.arguments.map(interpolate), {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
 					env: { ...process.env, ...mapValues(this.env, interpolate) },
 					silent: true
 				});
 				this.process.on('spawn', function () {
-					$this._port = $this.port;
+					$this._port = _port;
 					$this.process.on('exit', function () {
 						delete $this._port;
 						delete $this.process;
@@ -73,12 +77,15 @@ class App {
 				break;
 			case 'command':
 				var $this = this;
+				var _port = $this.port || await getPort({
+					exclude: Object.values(this.site.app).map(app => app.port).filter(Boolean)
+				});
 				this.process = child_process.spawn(interpolate(this.module), this.arguments.map(interpolate), {
 					...this.cwd ? { cwd: path.resolve(this.site.config.dir, this.cwd) } : {},
 					env: { ...process.env, ...mapValues(this.env, interpolate) }
 				});
 				this.process.on('spawn', function () {
-					$this._port = $this.port;
+					$this._port = _port;
 					$this.process.on('exit', function () {
 						delete $this._port;
 						delete $this.process;
@@ -92,7 +99,7 @@ class App {
 				break;
 		}
 		function interpolate(s) {
-			return interpolateString(s, { port: $this.port });
+			return interpolateString(s, { port: _port });
 		}
 	}
 	stop(callback) {
