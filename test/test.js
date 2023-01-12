@@ -26,7 +26,7 @@ it('proxy', async function () {
 		site.start();
 		var port = site.server.address().port;
 		var adminPort = site.adminServer.address().port;
-		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); })
+		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); });
 		targetServer.listen(8008);
 		var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "http://localhost:8008" });
 		assert.equal(response.statusCode, 201);
@@ -47,7 +47,7 @@ it('vhost', async function () {
 		site.start();
 		var port = site.server.address().port;
 		var adminPort = site.adminServer.address().port;
-		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); })
+		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); });
 		targetServer.listen(8008);
 		var response = await request.put(`http://localhost:${adminPort}/vhost/a.localhost`, { json: true, body: "http://localhost:8008" });
 		assert.equal(response.statusCode, 201);
