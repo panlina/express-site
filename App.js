@@ -40,7 +40,7 @@ class App {
 								delete $this._port;
 								delete $this.process;
 							});
-							callback.apply();
+							callback({ _port: $this._port });
 							break;
 						case 'error':
 							$this.process.kill();
@@ -68,7 +68,7 @@ class App {
 						delete $this._port;
 						delete $this.process;
 					});
-					callback.apply();
+					callback({ _port: $this._port });
 				});
 				this.process.on('error', function (e) {
 					delete $this.process;
@@ -90,7 +90,7 @@ class App {
 						delete $this._port;
 						delete $this.process;
 					});
-					callback.apply();
+					callback({ _port: $this._port });
 				});
 				this.process.on('error', function (e) {
 					delete $this.process;

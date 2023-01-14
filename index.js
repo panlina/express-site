@@ -106,7 +106,7 @@ class Site {
 		for (let name in app)
 			app[name].start(e => {
 				if (e instanceof Error) return;
-				eventEmitter.emit('start', `/app/${encodeURIComponent(name || 'default')}`);
+				eventEmitter.emit('start', `/app/${encodeURIComponent(name || 'default')}`, e);
 				app[name].process.on('exit', function (code, signal) {
 					eventEmitter.emit('stop', `/app/${encodeURIComponent(name || 'default')}`, { code, signal });
 				});

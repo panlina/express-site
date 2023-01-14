@@ -206,7 +206,7 @@ function AdminApp(site, { cors, auth }) {
 					res.status(500).send(e.message).end();
 					return;
 				}
-				site.eventEmitter.emit('start', `/app/${encodeURIComponent(req.params.name || 'default')}`);
+				site.eventEmitter.emit('start', `/app/${encodeURIComponent(req.params.name || 'default')}`, e);
 				a.process.on('exit', (code, signal) => {
 					site.eventEmitter.emit('stop', `/app/${encodeURIComponent(req.params.name || 'default')}`, { code, signal });
 				});
