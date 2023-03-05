@@ -7,6 +7,11 @@ var { waitFor } = require('poll-until-promise');
 var ncp = require('ncp');
 var rimraf = require('rimraf');
 var Site = require('..');
+var targetServerPort;
+before(async () => {
+	var { default: getPort } = await import('get-port');
+	targetServerPort = await getPort();
+});
 beforeEach(done => { ncp('test/site', 'test/site0', done); });
 afterEach(done => { rimraf('test/site0', done); });
 it('start and stop', async function () {
@@ -27,8 +32,8 @@ it('proxy', async function () {
 		var port = site.server.address().port;
 		var adminPort = site.adminServer.address().port;
 		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); });
-		targetServer.listen(8008);
-		var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "http://localhost:8008" });
+		targetServer.listen(targetServerPort);
+		var response = await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: `http://localhost:${targetServerPort}` });
 		assert.equal(response.statusCode, 201);
 		var response = await request.get(`http://localhost:${port}/a`);
 		assert.equal(response.body, "42");
@@ -48,8 +53,8 @@ it('vhost', async function () {
 		var port = site.server.address().port;
 		var adminPort = site.adminServer.address().port;
 		var targetServer = http.createServer((req, res) => { res.write("42"); res.end(); });
-		targetServer.listen(8008);
-		var response = await request.put(`http://localhost:${adminPort}/vhost/a.localhost`, { json: true, body: "http://localhost:8008" });
+		targetServer.listen(targetServerPort);
+		var response = await request.put(`http://localhost:${adminPort}/vhost/a.localhost`, { json: true, body: `http://localhost:${targetServerPort}` });
 		assert.equal(response.statusCode, 201);
 		var response = await request.get(`http://127.0.0.1:${port}`, { headers: { "Host": `a.localhost:${port}` } });
 		assert.equal(response.body, "42");
@@ -67,7 +72,7 @@ it('app.middleware', async function () {
 		"type": "middleware",
 		"module": "./middleware.js",
 		"arguments": ["--a", "abc"],
-		"port": 8008
+		"port": targetServerPort
 	});
 });
 it('app.standalone', async function () {
@@ -77,7 +82,7 @@ it('app.standalone', async function () {
 		"arguments": ["--a", "abc"],
 		"cwd": ".",
 		"env": { PORT: "{{port}}" },
-		"port": 8008
+		"port": targetServerPort
 	});
 });
 it('app.command', async function () {
@@ -87,7 +92,7 @@ it('app.command', async function () {
 		"arguments": ["start", "--", "--a", "abc"],
 		"cwd": "./npm-start",
 		"env": { PORT: "{{port}}" },
-		"port": 8008
+		"port": targetServerPort
 	});
 });
 it('app.middleware.auto-port', async function () {
@@ -167,7 +172,7 @@ it('persistence', async function () {
 		"module": "./standalone.js",
 		"arguments": ["--a", "abc"],
 		"env": { PORT: "{{port}}" },
-		"port": 8008
+		"port": targetServerPort
 	};
 	await request.put(`http://localhost:${adminPort}/app/a`, { json: true, body: app });
 	await request.put(`http://localhost:${adminPort}/proxy-rule/%2fa`, { json: true, body: "app:a" });
