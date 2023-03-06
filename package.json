@@ -19,6 +19,7 @@
     "get-port": "^6.1.2",
     "mocha": "^5.2.0",
     "ncp": "^2.0.0",
+    "npm-start": "^1.4.2",
     "poll-until-promise": "^4.0.4",
     "request": "^2.88.0",
     "request-promise": "^4.2.6",

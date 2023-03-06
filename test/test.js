@@ -88,8 +88,8 @@ it('app.standalone', async function () {
 it('app.command', async function () {
 	await testApp({
 		"type": "command",
-		"module": "npm",
-		"arguments": ["start", "--", "--a", "abc"],
+		"module": path.join(__dirname, '../node_modules/.bin/npm-start'),
+		"arguments": ["--a", "abc"],
 		"cwd": "./npm-start",
 		"env": { PORT: "{{port}}" },
 		"port": targetServerPort
@@ -116,8 +116,8 @@ it('app.standalone.auto-port', async function () {
 it('app.command.auto-port', async function () {
 	await testApp({
 		"type": "command",
-		"module": "npm",
-		"arguments": ["start", "--", "--a", "abc"],
+		"module": path.join(__dirname, '../node_modules/.bin/npm-start'),
+		"arguments": ["--a", "abc"],
 		"cwd": "./npm-start",
 		"env": { PORT: "{{port}}" },
 		"port": null
