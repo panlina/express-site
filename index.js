@@ -3,13 +3,11 @@ var path = require('path');
 var EventEmitter = require('events');
 var http = require('http');
 var https = require('https');
-var express = require('express');
 var cors = require('cors');
 var basicAuth = require('express-basic-auth');
-var httpProxy = require('http-proxy');
-var HttpProxyRules = require('./HttpProxyRules');
 var Module = require('./Module');
 var App = require('./App');
+var ProxyApp = require('./ProxyApp');
 var AdminApp = require('./AdminApp');
 var Storage = require('./Storage');
 class Site {
@@ -32,63 +30,19 @@ class Site {
 			};
 		if (!fs.existsSync(path.join(config.dir, 'require.resolve.js')))
 			fs.writeFileSync(path.join(config.dir, 'require.resolve.js'), fs.readFileSync(path.join(__dirname, 'require.resolve.js')));
-		var proxy = httpProxy.createProxyServer(
-			fs.existsSync(path.join(config.dir, 'proxyOptions.json')) ?
-				JSON.parse(fs.readFileSync(path.join(config.dir, 'proxyOptions.json'), { encoding: "utf-8" })) :
-				undefined
-		);
 		var proxyRule = Storage(path.join(config.dir, 'proxyRule.json'));
-		var proxyRules = new HttpProxyRules(proxyRule);
 		var vhost = Storage(path.join(config.dir, 'vhost.json'));
-		function matchHost(req) {
-			var host = req.header('Host');
-			var [host, port] = host.split(':');
-			return vhost[host];
-		}
-		var app = express();
-		app.use(
-			cors(
+		var app = new ProxyApp(this, {
+			proxyOptions: fs.existsSync(path.join(config.dir, 'proxyOptions.json')) ?
+				JSON.parse(fs.readFileSync(path.join(config.dir, 'proxyOptions.json'), { encoding: "utf-8" })) :
+				undefined,
+			cors: cors(
 				fs.existsSync(path.join(config.dir, 'cors.json')) ?
 					JSON.parse(
 						fs.readFileSync(path.join(config.dir, 'cors.json'), { encoding: "utf-8" })
 					) :
 					undefined
 			)
-		);
-		app.use(function (req, res, next) {
-			var target = matchHost(req) || proxyRules.match(req);
-			if (target) {
-				if (target.startsWith('app:')) {
-					var name = target.substr("app:".length);
-					var a = app[name];
-					if (a && a._port)
-						target = `http://localhost:${a._port}`;
-					else {
-						res.status(404)
-							.contentType('text/plain')
-							.send("App not found.");
-						return;
-					}
-				}
-				proxy.web(req, res, { target: target }, function (e) {
-					switch (e.code) {
-						case "ENOTFOUND":
-							res.status(404);
-							break;
-						case "ECONNREFUSED":
-							res.status(502);
-							break;
-						case "ETIMEDOUT":
-							res.status(504);
-							break;
-						default:
-							res.status(500);
-					}
-					res.contentType('text/plain').send(e.message);
-				});
-			}
-			else
-				next();
 		});
 		var server = (config.ssl ? https : http).createServer(config.ssl ? serverOptions : undefined, app);
 		server.listen(config.port);
